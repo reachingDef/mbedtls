@@ -3829,7 +3829,9 @@ int mbedtls_ssl_handshake_server_step( mbedtls_ssl_context *ssl )
             break;
 
         case MBEDTLS_SSL_SERVER_HELLO_DONE:
-            ret = ssl_write_server_hello_done( ssl );
+			log_idx = start_log(WRITE_SERVER_HELLO_DONE, global_log_ctx);
+			ret = ssl_write_server_hello_done( ssl );
+			end_log(WRITE_SERVER_HELLO_DONE, global_log_ctx, log_idx, ret);
             break;
 
         /*
@@ -3840,7 +3842,9 @@ int mbedtls_ssl_handshake_server_step( mbedtls_ssl_context *ssl )
          *        Finished
          */
         case MBEDTLS_SSL_CLIENT_CERTIFICATE:
-            ret = mbedtls_ssl_parse_certificate( ssl );
+			log_idx = start_log(PARSE_CLIENT_CERTIFICATE, global_log_ctx);
+			ret = mbedtls_ssl_parse_certificate( ssl );
+			end_log(PARSE_CLIENT_CERTIFICATE, global_log_ctx, log_idx, ret);
             break;
 
         case MBEDTLS_SSL_CLIENT_KEY_EXCHANGE:

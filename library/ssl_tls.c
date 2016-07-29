@@ -54,6 +54,8 @@
 #define mbedtls_free       free
 #endif
 
+#include "logging.h"
+
 /* Implementation that should never be optimized out by the compiler */
 static void mbedtls_zeroize( void *v, size_t n ) {
     volatile unsigned char *p = v; while( n-- ) *p++ = 0;
@@ -6295,7 +6297,7 @@ int mbedtls_ssl_handshake_step( mbedtls_ssl_context *ssl )
  */
 int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
 {
-    int ret = 0;
+    int ret = 0, log_idx;
 
     if( ssl == NULL || ssl->conf == NULL )
         return( MBEDTLS_ERR_SSL_BAD_INPUT_DATA );
@@ -6304,8 +6306,10 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
 
     while( ssl->state != MBEDTLS_SSL_HANDSHAKE_OVER )
     {
-        ret = mbedtls_ssl_handshake_step( ssl );
-
+		log_idx = start_log(HANDSHAKE_STEP, global_log_ctx);
+		ret = mbedtls_ssl_handshake_step( ssl );
+		set_result(HANDSHAKE_STEP, global_log_ctx, log_idx, ret);
+		end_log(HANDSHAKE_STEP, global_log_ctx, log_idx);
         if( ret != 0 )
             break;
     }

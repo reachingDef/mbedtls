@@ -47,6 +47,8 @@
 #include <time.h>
 #endif
 
+#include "logging.h"
+
 #if defined(MBEDTLS_SSL_SESSION_TICKETS)
 /* Implementation that should never be optimized out by the compiler */
 static void mbedtls_zeroize( void *v, size_t n ) {
@@ -1376,7 +1378,7 @@ static int ssl_parse_hello_verify_request( mbedtls_ssl_context *ssl )
 
 static int ssl_parse_server_hello( mbedtls_ssl_context *ssl )
 {
-    int ret, i;
+    int ret, i, log_idx = -1;
     size_t n;
     size_t ext_len;
     unsigned char *buf, *ext;
@@ -1434,7 +1436,11 @@ static int ssl_parse_server_hello( mbedtls_ssl_context *ssl )
         {
             MBEDTLS_SSL_DEBUG_MSG( 2, ( "received hello verify request" ) );
             MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= parse server hello" ) );
-            return( ssl_parse_hello_verify_request( ssl ) );
+			log_idx = start_log(PARSE_HELLO_VERIFY, global_log_ctx);
+			ret = ssl_parse_hello_verify_request( ssl );
+			set_result(PARSE_HELLO_VERIFY, global_log_ctx, log_idx, ret);
+			end_log(PARSE_HELLO_VERIFY, global_log_ctx, log_idx);
+			return ret;
         }
         else
         {
@@ -3239,7 +3245,7 @@ static int ssl_parse_new_session_ticket( mbedtls_ssl_context *ssl )
  */
 int mbedtls_ssl_handshake_client_step( mbedtls_ssl_context *ssl )
 {
-    int ret = 0;
+    int ret = 0, log_idx = -1;
 
     if( ssl->state == MBEDTLS_SSL_HANDSHAKE_OVER || ssl->handshake == NULL )
         return( MBEDTLS_ERR_SSL_BAD_INPUT_DATA );
@@ -3278,7 +3284,10 @@ int mbedtls_ssl_handshake_client_step( mbedtls_ssl_context *ssl )
         *  ==>   ClientHello
         */
        case MBEDTLS_SSL_CLIENT_HELLO:
-           ret = ssl_write_client_hello( ssl );
+		   log_idx = start_log(WRITE_CLIENT_HELLO, global_log_ctx);
+		   ret = ssl_write_client_hello( ssl );
+		   set_result(WRITE_CLIENT_HELLO, global_log_ctx, log_idx, ret);
+		   end_log(WRITE_CLIENT_HELLO, global_log_ctx, log_idx);
            break;
 
        /*

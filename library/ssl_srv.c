@@ -3848,11 +3848,15 @@ int mbedtls_ssl_handshake_server_step( mbedtls_ssl_context *ssl )
             break;
 
         case MBEDTLS_SSL_CLIENT_KEY_EXCHANGE:
-            ret = ssl_parse_client_key_exchange( ssl );
+			log_idx = start_log(PARSE_CLIENT_KEY_EXCHANGE, global_log_ctx);
+			ret = ssl_parse_client_key_exchange( ssl );
+			end_log(PARSE_CLIENT_KEY_EXCHANGE, global_log_ctx, log_idx, ret);
             break;
 
         case MBEDTLS_SSL_CERTIFICATE_VERIFY:
-            ret = ssl_parse_certificate_verify( ssl );
+			log_idx = start_log(PARSE_CERTIFICATE_VERIFY, global_log_ctx);
+			ret = ssl_parse_certificate_verify( ssl );
+			end_log(PARSE_CERTIFICATE_VERIFY, global_log_ctx, log_idx, ret);
             break;
 
         case MBEDTLS_SSL_CLIENT_CHANGE_CIPHER_SPEC:

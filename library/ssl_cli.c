@@ -1316,7 +1316,7 @@ static int ssl_parse_alpn_ext( mbedtls_ssl_context *ssl,
 #if defined(MBEDTLS_SSL_PROTO_DTLS)
 static int ssl_parse_hello_verify_request( mbedtls_ssl_context *ssl )
 {
-    const unsigned char *p = ssl->in_msg + mbedtls_ssl_hs_hdr_len( ssl );
+	const unsigned char *p = ssl->in_msg + mbedtls_ssl_hs_hdr_len( ssl );
     int major_ver, minor_ver;
     unsigned char cookie_len;
 
@@ -1438,8 +1438,7 @@ static int ssl_parse_server_hello( mbedtls_ssl_context *ssl )
             MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= parse server hello" ) );
 			log_idx = start_log(PARSE_HELLO_VERIFY, global_log_ctx);
 			ret = ssl_parse_hello_verify_request( ssl );
-			set_result(PARSE_HELLO_VERIFY, global_log_ctx, log_idx, ret);
-			end_log(PARSE_HELLO_VERIFY, global_log_ctx, log_idx);
+			end_log(PARSE_HELLO_VERIFY, global_log_ctx, log_idx, ret);
 			return ret;
         }
         else
@@ -3286,8 +3285,7 @@ int mbedtls_ssl_handshake_client_step( mbedtls_ssl_context *ssl )
        case MBEDTLS_SSL_CLIENT_HELLO:
 		   log_idx = start_log(WRITE_CLIENT_HELLO, global_log_ctx);
 		   ret = ssl_write_client_hello( ssl );
-		   set_result(WRITE_CLIENT_HELLO, global_log_ctx, log_idx, ret);
-		   end_log(WRITE_CLIENT_HELLO, global_log_ctx, log_idx);
+		   end_log(WRITE_CLIENT_HELLO, global_log_ctx, log_idx, ret);
            break;
 
        /*

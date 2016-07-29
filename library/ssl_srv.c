@@ -2228,8 +2228,7 @@ static int ssl_write_server_hello( mbedtls_ssl_context *ssl )
         MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= write server hello" ) );
 		log_idx = start_log(WRITE_HELLO_VERIFY, global_log_ctx);
 		ret = ssl_write_hello_verify_request( ssl );
-		set_result(WRITE_HELLO_VERIFY, global_log_ctx, log_idx, ret);
-		end_log(WRITE_HELLO_VERIFY, global_log_ctx, log_idx);
+		end_log(WRITE_HELLO_VERIFY, global_log_ctx, log_idx, ret);
 		return ret;
     }
 #endif /* MBEDTLS_SSL_DTLS_HELLO_VERIFY */
@@ -3790,8 +3789,7 @@ int mbedtls_ssl_handshake_server_step( mbedtls_ssl_context *ssl )
         case MBEDTLS_SSL_CLIENT_HELLO:
 			log_idx = start_log(PARSE_CLIENT_HELLO, global_log_ctx);
 			ret = ssl_parse_client_hello( ssl );
-			set_result(PARSE_CLIENT_HELLO, global_log_ctx, log_idx, ret);
-			end_log(PARSE_CLIENT_HELLO, global_log_ctx, log_idx);
+			end_log(PARSE_CLIENT_HELLO, global_log_ctx, log_idx, ret);
             break;
 
 #if defined(MBEDTLS_SSL_PROTO_DTLS)

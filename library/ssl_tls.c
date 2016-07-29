@@ -6297,7 +6297,7 @@ int mbedtls_ssl_handshake_step( mbedtls_ssl_context *ssl )
  */
 int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
 {
-    int ret = 0, log_idx;
+    int ret = 0, log_idx=-1;
 
     if( ssl == NULL || ssl->conf == NULL )
         return( MBEDTLS_ERR_SSL_BAD_INPUT_DATA );
@@ -6308,8 +6308,7 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
     {
 		log_idx = start_log(HANDSHAKE_STEP, global_log_ctx);
 		ret = mbedtls_ssl_handshake_step( ssl );
-		set_result(HANDSHAKE_STEP, global_log_ctx, log_idx, ret);
-		end_log(HANDSHAKE_STEP, global_log_ctx, log_idx);
+		end_log(HANDSHAKE_STEP, global_log_ctx, log_idx, ret);
         if( ret != 0 )
             break;
     }

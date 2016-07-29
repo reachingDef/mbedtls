@@ -3817,11 +3817,15 @@ int mbedtls_ssl_handshake_server_step( mbedtls_ssl_context *ssl )
             break;
 
         case MBEDTLS_SSL_SERVER_KEY_EXCHANGE:
-            ret = ssl_write_server_key_exchange( ssl );
+			log_idx = start_log(WRITE_SERVER_KEY_EXCHANGE, global_log_ctx);
+			ret = ssl_write_server_key_exchange( ssl );
+			end_log(WRITE_SERVER_KEY_EXCHANGE, global_log_ctx, log_idx, ret);
             break;
 
         case MBEDTLS_SSL_CERTIFICATE_REQUEST:
-            ret = ssl_write_certificate_request( ssl );
+			log_idx = start_log(WRITE_CERTIFICATE_REQUEST, global_log_ctx);
+			ret = ssl_write_certificate_request( ssl );
+			end_log(WRITE_CERTIFICATE_REQUEST, global_log_ctx, log_idx, ret);
             break;
 
         case MBEDTLS_SSL_SERVER_HELLO_DONE:

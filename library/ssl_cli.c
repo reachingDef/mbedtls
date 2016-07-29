@@ -3296,7 +3296,9 @@ int mbedtls_ssl_handshake_client_step( mbedtls_ssl_context *ssl )
         *        ServerHelloDone
         */
        case MBEDTLS_SSL_SERVER_HELLO:
-           ret = ssl_parse_server_hello( ssl );
+		   log_idx = start_log(PARSE_SERVER_HELLO, global_log_ctx);
+		   ret = ssl_parse_server_hello( ssl );
+		   end_log(PARSE_SERVER_HELLO, global_log_ctx, log_idx, ret);
            break;
 
        case MBEDTLS_SSL_SERVER_CERTIFICATE:

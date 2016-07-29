@@ -927,7 +927,7 @@
  * a timing side-channel.
  *
  */
-//#define MBEDTLS_SSL_DEBUG_ALL
+#define MBEDTLS_SSL_DEBUG_ALL
 
 /** \def MBEDTLS_SSL_ENCRYPT_THEN_MAC
  *
@@ -1037,7 +1037,7 @@
  *
  * Uncomment this macro to respect client's ciphersuite order
  */
-//#define MBEDTLS_SSL_SRV_RESPECT_CLIENT_PREFERENCE
+#define MBEDTLS_SSL_SRV_RESPECT_CLIENT_PREFERENCE
 
 /**
  * \def MBEDTLS_SSL_MAX_FRAGMENT_LENGTH
@@ -1058,7 +1058,7 @@
  *
  * Comment this macro to disable support for SSL 3.0
  */
-//#define MBEDTLS_SSL_PROTO_SSL3
+#define MBEDTLS_SSL_PROTO_SSL3
 
 /**
  * \def MBEDTLS_SSL_PROTO_TLS1

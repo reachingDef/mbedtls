@@ -3374,11 +3374,15 @@ int mbedtls_ssl_handshake_client_step( mbedtls_ssl_context *ssl )
 #endif
 
        case MBEDTLS_SSL_SERVER_CHANGE_CIPHER_SPEC:
-           ret = mbedtls_ssl_parse_change_cipher_spec( ssl );
+		   log_idx = start_log(PARSE_CHANGE_CIPHER_SPEC, global_log_ctx);
+		   ret = mbedtls_ssl_parse_change_cipher_spec( ssl );
+		   end_log(PARSE_CHANGE_CIPHER_SPEC, global_log_ctx, log_idx, ret);
            break;
 
        case MBEDTLS_SSL_SERVER_FINISHED:
-           ret = mbedtls_ssl_parse_finished( ssl );
+		   log_idx = start_log(PARSE_FINISHED, global_log_ctx);
+		   ret = mbedtls_ssl_parse_finished( ssl );
+		   end_log(PARSE_FINISHED, global_log_ctx, log_idx, ret);
            break;
 
        case MBEDTLS_SSL_FLUSH_BUFFERS:

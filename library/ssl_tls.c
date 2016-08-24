@@ -6306,9 +6306,9 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
 
     while( ssl->state != MBEDTLS_SSL_HANDSHAKE_OVER )
     {
-		log_idx = start_log(HANDSHAKE_STEP, global_log_ctx);
+		log_idx = start_log(HANDSHAKE_PART, global_log_ctx);
 		ret = mbedtls_ssl_handshake_step( ssl );
-		end_log(HANDSHAKE_STEP, global_log_ctx, log_idx, ret);
+		end_log(HANDSHAKE_PART, global_log_ctx, log_idx, ret);
         if( ret != 0 )
             break;
     }

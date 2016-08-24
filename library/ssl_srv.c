@@ -2226,10 +2226,10 @@ static int ssl_write_server_hello( mbedtls_ssl_context *ssl )
     {
         MBEDTLS_SSL_DEBUG_MSG( 2, ( "client hello was not authenticated" ) );
         MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= write server hello" ) );
-		log_idx = start_log(WRITE_HELLO_VERIFY, global_log_ctx);
-		ret = ssl_write_hello_verify_request( ssl );
-		end_log(WRITE_HELLO_VERIFY, global_log_ctx, log_idx, ret);
-		return ret;
+        log_point(WRITE_HELLO_VERIFY_START, global_log_ctx, 0);
+        ret = ssl_write_hello_verify_request( ssl );
+        log_point(WRITE_HELLO_VERIFY_STOP, global_log_ctx, ret);
+        return ret;
     }
 #endif /* MBEDTLS_SSL_DTLS_HELLO_VERIFY */
 
@@ -3787,9 +3787,9 @@ int mbedtls_ssl_handshake_server_step( mbedtls_ssl_context *ssl )
          *  <==   ClientHello
          */
         case MBEDTLS_SSL_CLIENT_HELLO:
-			log_idx = start_log(PARSE_CLIENT_HELLO, global_log_ctx);
-			ret = ssl_parse_client_hello( ssl );
-			end_log(PARSE_CLIENT_HELLO, global_log_ctx, log_idx, ret);
+            log_point(PARSE_CLIENT_HELLO_START, global_log_ctx, 0);
+            ret = ssl_parse_client_hello( ssl );
+            log_point(PARSE_CLIENT_HELLO_START, global_log_ctx, ret);
             break;
 
 #if defined(MBEDTLS_SSL_PROTO_DTLS)
@@ -3805,33 +3805,33 @@ int mbedtls_ssl_handshake_server_step( mbedtls_ssl_context *ssl )
          *        ServerHelloDone
          */
         case MBEDTLS_SSL_SERVER_HELLO:
-			log_idx = start_log(WRITE_SERVER_HELLO, global_log_ctx);
-			ret = ssl_write_server_hello( ssl );
-			end_log(WRITE_SERVER_HELLO, global_log_ctx, log_idx, ret);
+            log_point(WRITE_SERVER_HELLO_START, global_log_ctx, 0);
+            ret = ssl_write_server_hello( ssl );
+            log_point(WRITE_SERVER_HELLO_STOP, global_log_ctx, ret);
             break;
 
         case MBEDTLS_SSL_SERVER_CERTIFICATE:
-			log_idx = start_log(WRITE_SERVER_CERTIFICATE, global_log_ctx);
-			ret = mbedtls_ssl_write_certificate( ssl );
-			end_log(WRITE_SERVER_CERTIFICATE, global_log_ctx, log_idx, ret);
+            log_point(WRITE_SERVER_CERTIFICATE_START, global_log_ctx, 0);
+            ret = mbedtls_ssl_write_certificate( ssl );
+            log_point(WRITE_SERVER_CERTIFICATE_STOP, global_log_ctx, ret);
             break;
 
         case MBEDTLS_SSL_SERVER_KEY_EXCHANGE:
-			log_idx = start_log(WRITE_SERVER_KEY_EXCHANGE, global_log_ctx);
-			ret = ssl_write_server_key_exchange( ssl );
-			end_log(WRITE_SERVER_KEY_EXCHANGE, global_log_ctx, log_idx, ret);
+            log_point(WRITE_SERVER_KEY_EXCHANGE_START, global_log_ctx, 0);
+            ret = ssl_write_server_key_exchange( ssl );
+            log_point(WRITE_SERVER_KEY_EXCHANGE_STOP, global_log_ctx, ret);
             break;
 
         case MBEDTLS_SSL_CERTIFICATE_REQUEST:
-			log_idx = start_log(WRITE_CERTIFICATE_REQUEST, global_log_ctx);
-			ret = ssl_write_certificate_request( ssl );
-			end_log(WRITE_CERTIFICATE_REQUEST, global_log_ctx, log_idx, ret);
+            log_point(WRITE_CERTIFICATE_REQUEST_START, global_log_ctx, 0);
+            ret = ssl_write_certificate_request( ssl );
+            log_point(WRITE_CERTIFICATE_REQUEST_STOP, global_log_ctx, ret);
             break;
 
         case MBEDTLS_SSL_SERVER_HELLO_DONE:
-			log_idx = start_log(WRITE_SERVER_HELLO_DONE, global_log_ctx);
-			ret = ssl_write_server_hello_done( ssl );
-			end_log(WRITE_SERVER_HELLO_DONE, global_log_ctx, log_idx, ret);
+            log_point(WRITE_SERVER_HELLO_DONE_START, global_log_ctx, 0);
+            ret = ssl_write_server_hello_done( ssl );
+            log_point(WRITE_SERVER_HELLO_DONE_STOP, global_log_ctx, ret);
             break;
 
         /*
@@ -3842,33 +3842,33 @@ int mbedtls_ssl_handshake_server_step( mbedtls_ssl_context *ssl )
          *        Finished
          */
         case MBEDTLS_SSL_CLIENT_CERTIFICATE:
-			log_idx = start_log(PARSE_CLIENT_CERTIFICATE, global_log_ctx);
-			ret = mbedtls_ssl_parse_certificate( ssl );
-			end_log(PARSE_CLIENT_CERTIFICATE, global_log_ctx, log_idx, ret);
+            log_point(PARSE_CLIENT_CERTIFICATE_START, global_log_ctx, 0);
+            ret = mbedtls_ssl_parse_certificate( ssl );
+            log_point(PARSE_CLIENT_CERTIFICATE_STOP, global_log_ctx, ret);
             break;
 
         case MBEDTLS_SSL_CLIENT_KEY_EXCHANGE:
-			log_idx = start_log(PARSE_CLIENT_KEY_EXCHANGE, global_log_ctx);
-			ret = ssl_parse_client_key_exchange( ssl );
-			end_log(PARSE_CLIENT_KEY_EXCHANGE, global_log_ctx, log_idx, ret);
+            log_point(PARSE_CLIENT_KEY_EXCHANGE_START, global_log_ctx, 0);
+            ret = ssl_parse_client_key_exchange( ssl );
+            log_point(PARSE_CLIENT_KEY_EXCHANGE_STOP, global_log_ctx, ret);
             break;
 
         case MBEDTLS_SSL_CERTIFICATE_VERIFY:
-			log_idx = start_log(PARSE_CERTIFICATE_VERIFY, global_log_ctx);
-			ret = ssl_parse_certificate_verify( ssl );
-			end_log(PARSE_CERTIFICATE_VERIFY, global_log_ctx, log_idx, ret);
+            log_point(PARSE_CERTIFICATE_VERIFY_START, global_log_ctx, 0);
+            ret = ssl_parse_certificate_verify( ssl );
+            log_point(PARSE_CERTIFICATE_VERIFY_STOP, global_log_ctx, ret);
             break;
 
         case MBEDTLS_SSL_CLIENT_CHANGE_CIPHER_SPEC:
-			log_idx = start_log(PARSE_CHANGE_CIPHER_SPEC, global_log_ctx);
-			ret = mbedtls_ssl_parse_change_cipher_spec( ssl );
-			end_log(PARSE_CHANGE_CIPHER_SPEC, global_log_ctx, log_idx, ret);
+            log_point(PARSE_CHANGE_CIPHER_SPEC_START, global_log_ctx, 0);
+            ret = mbedtls_ssl_parse_change_cipher_spec( ssl );
+            log_point(PARSE_CHANGE_CIPHER_SPEC_STOP, global_log_ctx, ret);
             break;
 
         case MBEDTLS_SSL_CLIENT_FINISHED:
-			log_idx = start_log(PARSE_FINISHED, global_log_ctx);
-			ret = mbedtls_ssl_parse_finished( ssl );
-			end_log(PARSE_FINISHED, global_log_ctx, log_idx, ret);
+            log_point(PARSE_FINISHED_START, global_log_ctx, 0);
+            ret = mbedtls_ssl_parse_finished( ssl );
+            log_point(PARSE_FINISHED_STOP, global_log_ctx, ret);
             break;
 
         /*
@@ -3882,15 +3882,15 @@ int mbedtls_ssl_handshake_server_step( mbedtls_ssl_context *ssl )
                 ret = ssl_write_new_session_ticket( ssl );
             else
 #endif
-				log_idx = start_log(WRITE_CHANGE_CIPHER_SPEC, global_log_ctx);
-				ret = mbedtls_ssl_write_change_cipher_spec( ssl );
-				end_log(WRITE_CHANGE_CIPHER_SPEC, global_log_ctx, log_idx, ret);
+                log_point(WRITE_CHANGE_CIPHER_SPEC_START, global_log_ctx, 0);
+                ret = mbedtls_ssl_write_change_cipher_spec( ssl );
+                log_point(WRITE_CHANGE_CIPHER_SPEC_STOP, global_log_ctx, ret);
             break;
 
         case MBEDTLS_SSL_SERVER_FINISHED:
-			log_idx = start_log(WRITE_FINISHED, global_log_ctx);
-			ret = mbedtls_ssl_write_finished( ssl );
-			end_log(WRITE_FINISHED, global_log_ctx, log_idx, ret);
+            log_point(WRITE_FINISHED_START, global_log_ctx, 0);
+            ret = mbedtls_ssl_write_finished( ssl );
+            log_point(WRITE_FINISHED_STOP, global_log_ctx, ret);
             break;
 
         case MBEDTLS_SSL_FLUSH_BUFFERS:

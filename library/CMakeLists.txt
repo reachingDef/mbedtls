@@ -69,7 +69,7 @@ set(src_x509
     x509write_csr.c
 )
 
-include_directories ("../../../src/")
+include_directories ("../../src/")
 
 set(src_tls
     debug.c

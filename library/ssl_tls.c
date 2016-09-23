@@ -436,8 +436,11 @@ static int tls_prf_sha256( const unsigned char *secret, size_t slen,
                            const unsigned char *random, size_t rlen,
                            unsigned char *dstbuf, size_t dlen )
 {
-    return( tls_prf_generic( MBEDTLS_MD_SHA256, secret, slen,
-                             label, random, rlen, dstbuf, dlen ) );
+    log_point(PRF_SHA256_START, global_log_ctx, 0);
+    int ret = tls_prf_generic( MBEDTLS_MD_SHA256, secret, slen,
+                             label, random, rlen, dstbuf, dlen );
+    log_point(PRF_SHA256_STOP, global_log_ctx, ret);
+    return ret;
 }
 #endif /* MBEDTLS_SHA256_C */
 
@@ -447,8 +450,11 @@ static int tls_prf_sha384( const unsigned char *secret, size_t slen,
                            const unsigned char *random, size_t rlen,
                            unsigned char *dstbuf, size_t dlen )
 {
-    return( tls_prf_generic( MBEDTLS_MD_SHA384, secret, slen,
-                             label, random, rlen, dstbuf, dlen ) );
+    log_point(PRF_SHA384_START, global_log_ctx, 0);
+    int ret = tls_prf_generic( MBEDTLS_MD_SHA384, secret, slen,
+                             label, random, rlen, dstbuf, dlen );
+    log_point(PRF_SHA384_STOP, global_log_ctx, 0);
+    return ret;
 }
 #endif /* MBEDTLS_SHA512_C */
 #endif /* MBEDTLS_SSL_PROTO_TLS1_2 */
@@ -610,10 +616,12 @@ int mbedtls_ssl_derive_keys( mbedtls_ssl_context *ssl )
 
             MBEDTLS_SSL_DEBUG_BUF( 3, "session hash", session_hash, hash_len );
 
+            log_point(HS_GENERATE_EXTENDED_MASTER_KEY_START, global_log_ctx, 0);
             ret = handshake->tls_prf( handshake->premaster, handshake->pmslen,
                                       "extended master secret",
                                       session_hash, hash_len,
                                       session->master, 48 );
+            log_point(HS_GENERATE_EXTENDED_MASTER_KEY_STOP, global_log_ctx, ret);
             if( ret != 0 )
             {
                 MBEDTLS_SSL_DEBUG_RET( 1, "prf", ret );
@@ -623,10 +631,12 @@ int mbedtls_ssl_derive_keys( mbedtls_ssl_context *ssl )
         }
         else
 #endif
+        log_point(GENERATE_MASTER_SECRET_START, global_log_ctx, 0);
         ret = handshake->tls_prf( handshake->premaster, handshake->pmslen,
                                   "master secret",
                                   handshake->randbytes, 64,
                                   session->master, 48 );
+        log_point(GENERATE_MASTER_SECRET_STOP, global_log_ctx, ret);
         if( ret != 0 )
         {
             MBEDTLS_SSL_DEBUG_RET( 1, "prf", ret );
@@ -658,8 +668,10 @@ int mbedtls_ssl_derive_keys( mbedtls_ssl_context *ssl )
      *  TLSv1:
      *    key block = PRF( master, "key expansion", randbytes )
      */
+    log_point(HANDSHAKE_KEY_EXPANSION_START, global_log_ctx, 0);
     ret = handshake->tls_prf( session->master, 48, "key expansion",
                               handshake->randbytes, 64, keyblk, 256 );
+    log_point(HANDSHAKE_KEY_EXPANSION_STOP, global_log_ctx, ret);
     if( ret != 0 )
     {
         MBEDTLS_SSL_DEBUG_RET( 1, "prf", ret );
@@ -1255,6 +1267,7 @@ static void ssl_mac( mbedtls_md_context_t *md_ctx, unsigned char *secret,
  */
 static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
 {
+    log_point(REC_ENC_BUF_START, global_log_ctx, 0);
     mbedtls_cipher_mode_t mode;
     int auth_done = 0;
 
@@ -1296,6 +1309,7 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
         defined(MBEDTLS_SSL_PROTO_TLS1_2)
         if( ssl->minor_ver >= MBEDTLS_SSL_MINOR_VERSION_1 )
         {
+            log_point(REC_ENC_BUF_HMAC_HASH_START, global_log_ctx, 0);
             mbedtls_md_hmac_update( &ssl->transform_out->md_ctx_enc, ssl->out_ctr, 8 );
             mbedtls_md_hmac_update( &ssl->transform_out->md_ctx_enc, ssl->out_hdr, 3 );
             mbedtls_md_hmac_update( &ssl->transform_out->md_ctx_enc, ssl->out_len, 2 );
@@ -1304,6 +1318,7 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
             mbedtls_md_hmac_finish( &ssl->transform_out->md_ctx_enc,
                              ssl->out_msg + ssl->out_msglen );
             mbedtls_md_hmac_reset( &ssl->transform_out->md_ctx_enc );
+            log_point(REC_ENC_BUF_HMAC_HASH_STOP, global_log_ctx, 0);
         }
         else
 #endif
@@ -1495,11 +1510,14 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
                             ssl->out_msglen, ssl->transform_out->ivlen,
                             padlen + 1 ) );
 
-        if( ( ret = mbedtls_cipher_crypt( &ssl->transform_out->cipher_ctx_enc,
+        log_point(REC_ENC_BUF_CIPHER_CRYPT_SYM_START, global_log_ctx, 0);
+        ret = mbedtls_cipher_crypt( &ssl->transform_out->cipher_ctx_enc,
                                    ssl->transform_out->iv_enc,
                                    ssl->transform_out->ivlen,
                                    enc_msg, enc_msglen,
-                                   enc_msg, &olen ) ) != 0 )
+                                   enc_msg, &olen );
+        log_point(REC_ENC_BUF_CIPHER_CRYPT_SYM_STOP, global_log_ctx, 0);
+        if ( ret != 0 )
         {
             MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_cipher_crypt", ret );
             return( ret );
@@ -1573,6 +1591,7 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
     }
 
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= encrypt buf" ) );
+    log_point(REC_ENC_BUF_STOP, global_log_ctx, 0);
 
     return( 0 );
 }
@@ -4844,8 +4863,10 @@ static void ssl_calc_finished_tls_sha256(
 
     mbedtls_sha256_finish( &sha256, padbuf );
 
+    log_point(HS_FINISHED_SHA256_START, global_log_ctx, 0);
     ssl->handshake->tls_prf( session->master, 48, sender,
                              padbuf, 32, buf, len );
+    log_point(HS_FINISHED_SHA256_STOP, global_log_ctx, 0);
 
     MBEDTLS_SSL_DEBUG_BUF( 3, "calc finished result", buf, len );
 
@@ -4893,8 +4914,10 @@ static void ssl_calc_finished_tls_sha384(
 
     mbedtls_sha512_finish( &sha512, padbuf );
 
+    log_point(HS_FINISHED_SHA512_START, global_log_ctx, 0);
     ssl->handshake->tls_prf( session->master, 48, sender,
                              padbuf, 48, buf, len );
+    log_point(HS_FINISHED_SHA512_STOP, global_log_ctx, 0);
 
     MBEDTLS_SSL_DEBUG_BUF( 3, "calc finished result", buf, len );
 

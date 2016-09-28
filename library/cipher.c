@@ -49,6 +49,8 @@
 #define MBEDTLS_CIPHER_MODE_STREAM
 #endif
 
+#include "logging.h"
+
 /* Implementation that should never be optimized out by the compiler */
 static void mbedtls_zeroize( void *v, size_t n ) {
     volatile unsigned char *p = v; while( n-- ) *p++ = 0;
@@ -814,22 +816,29 @@ int mbedtls_cipher_auth_encrypt( mbedtls_cipher_context_t *ctx,
                          unsigned char *output, size_t *olen,
                          unsigned char *tag, size_t tag_len )
 {
+    int ret;
 #if defined(MBEDTLS_GCM_C)
     if( MBEDTLS_MODE_GCM == ctx->cipher_info->mode )
     {
         *olen = ilen;
-        return( mbedtls_gcm_crypt_and_tag( ctx->cipher_ctx, MBEDTLS_GCM_ENCRYPT, ilen,
+        log_point(REC_ENC_GCM_SYM_START, global_log_ctx, 0); 
+        ret = mbedtls_gcm_crypt_and_tag( ctx->cipher_ctx, MBEDTLS_GCM_ENCRYPT, ilen,
                                    iv, iv_len, ad, ad_len, input, output,
-                                   tag_len, tag ) );
+                                   tag_len, tag );
+        log_point(REC_ENC_GCM_SYM_STOP, global_log_ctx, ret);
+        return ret;
     }
 #endif /* MBEDTLS_GCM_C */
 #if defined(MBEDTLS_CCM_C)
     if( MBEDTLS_MODE_CCM == ctx->cipher_info->mode )
     {
         *olen = ilen;
-        return( mbedtls_ccm_encrypt_and_tag( ctx->cipher_ctx, ilen,
+        log_point(REC_ENC_CCM_SYM_START, global_log_ctx, 0);
+        ret = mbedtls_ccm_encrypt_and_tag( ctx->cipher_ctx, ilen,
                                      iv, iv_len, ad, ad_len, input, output,
-                                     tag, tag_len ) );
+                                     tag, tag_len );
+        log_point(REC_ENC_CCM_SYM_STOP, global_log_ctx, ret);
+        return ret;
     }
 #endif /* MBEDTLS_CCM_C */
 
@@ -852,10 +861,11 @@ int mbedtls_cipher_auth_decrypt( mbedtls_cipher_context_t *ctx,
         int ret;
 
         *olen = ilen;
+        log_point(REC_DEC_GCM_SYM_START, global_log_ctx, 0);
         ret = mbedtls_gcm_auth_decrypt( ctx->cipher_ctx, ilen,
                                 iv, iv_len, ad, ad_len,
                                 tag, tag_len, input, output );
-
+        log_point(REC_DEC_GCM_SYM_STOP, global_log_ctx, ret);
         if( ret == MBEDTLS_ERR_GCM_AUTH_FAILED )
             ret = MBEDTLS_ERR_CIPHER_AUTH_FAILED;
 
@@ -868,10 +878,11 @@ int mbedtls_cipher_auth_decrypt( mbedtls_cipher_context_t *ctx,
         int ret;
 
         *olen = ilen;
+        log_point(REC_DEC_CCM_SYM_START, global_log_ctx, 0);
         ret = mbedtls_ccm_auth_decrypt( ctx->cipher_ctx, ilen,
                                 iv, iv_len, ad, ad_len,
                                 input, output, tag, tag_len );
-
+        log_point(REC_DEC_CCM_SYM_STOP, global_log_ctx, ret);
         if( ret == MBEDTLS_ERR_CCM_AUTH_FAILED )
             ret = MBEDTLS_ERR_CIPHER_AUTH_FAILED;
 

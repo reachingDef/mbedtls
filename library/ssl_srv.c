@@ -2214,7 +2214,7 @@ static int ssl_write_server_hello( mbedtls_ssl_context *ssl )
 #if defined(MBEDTLS_HAVE_TIME)
     time_t t;
 #endif
-    int ret, log_idx = -1;
+    int ret;
     size_t olen, ext_len = 0, n;
     unsigned char *buf, *p;
 
@@ -2759,9 +2759,12 @@ static int ssl_write_server_key_exchange( mbedtls_ssl_context *ssl )
             return( ret );
         }
 
-        if( ( ret = mbedtls_dhm_make_params( &ssl->handshake->dhm_ctx,
+        log_point(HS_DHM_MAKE_PARAMS_ASYM_START, global_log_ctx, 0);
+        ret = mbedtls_dhm_make_params( &ssl->handshake->dhm_ctx,
                         (int) mbedtls_mpi_size( &ssl->handshake->dhm_ctx.P ),
-                        p, &len, ssl->conf->f_rng, ssl->conf->p_rng ) ) != 0 )
+                        p, &len, ssl->conf->f_rng, ssl->conf->p_rng );
+        log_point(HS_DHM_MAKE_PARAMS_ASYM_STOP, global_log_ctx, ret);
+        if( ret != 0 )
         {
             MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_dhm_make_params", ret );
             return( ret );
@@ -3096,6 +3099,7 @@ static int ssl_parse_encrypted_pms( mbedtls_ssl_context *ssl,
                                     const unsigned char *end,
                                     size_t pms_offset )
 {
+    log_point(HS_PARSE_PMS_START, global_log_ctx, 0);
     int ret;
     size_t len = mbedtls_pk_get_len( mbedtls_ssl_own_key( ssl ) );
     unsigned char *pms = ssl->handshake->premaster + pms_offset;
@@ -3148,11 +3152,12 @@ static int ssl_parse_encrypted_pms( mbedtls_ssl_context *ssl,
     if( ret != 0 )
         return( ret );
 
+    log_point(HS_PK_DECRYPT_ASYM_START, global_log_ctx, 0);
     ret = mbedtls_pk_decrypt( mbedtls_ssl_own_key( ssl ), p, len,
                       peer_pms, &peer_pmslen,
                       sizeof( peer_pms ),
                       ssl->conf->f_rng, ssl->conf->p_rng );
-
+    log_point(HS_PK_DECRYPT_ASYM_STOP, global_log_ctx, ret);
     diff  = (unsigned int) ret;
     diff |= peer_pmslen ^ 48;
     diff |= peer_pms[0] ^ ver[0];
@@ -3186,6 +3191,7 @@ static int ssl_parse_encrypted_pms( mbedtls_ssl_context *ssl,
     for( i = 0; i < ssl->handshake->pmslen; i++ )
         pms[i] = ( mask & fake_pms[i] ) | ( (~mask) & peer_pms[i] );
 
+    log_point(HS_PARSE_PMS_STOP, global_log_ctx, 0);
     return( 0 );
 }
 #endif /* MBEDTLS_KEY_EXCHANGE_RSA_ENABLED ||
@@ -3758,7 +3764,7 @@ static int ssl_write_new_session_ticket( mbedtls_ssl_context *ssl )
  */
 int mbedtls_ssl_handshake_server_step( mbedtls_ssl_context *ssl )
 {
-    int ret = 0, log_idx=-1;
+    int ret = 0;
 
     if( ssl->state == MBEDTLS_SSL_HANDSHAKE_OVER || ssl->handshake == NULL )
         return( MBEDTLS_ERR_SSL_BAD_INPUT_DATA );
@@ -3789,7 +3795,7 @@ int mbedtls_ssl_handshake_server_step( mbedtls_ssl_context *ssl )
         case MBEDTLS_SSL_CLIENT_HELLO:
             log_point(PARSE_CLIENT_HELLO_START, global_log_ctx, 0);
             ret = ssl_parse_client_hello( ssl );
-            log_point(PARSE_CLIENT_HELLO_START, global_log_ctx, ret);
+            log_point(PARSE_CLIENT_HELLO_STOP, global_log_ctx, ret);
             break;
 
 #if defined(MBEDTLS_SSL_PROTO_DTLS)
@@ -3878,13 +3884,14 @@ int mbedtls_ssl_handshake_server_step( mbedtls_ssl_context *ssl )
          */
         case MBEDTLS_SSL_SERVER_CHANGE_CIPHER_SPEC:
 #if defined(MBEDTLS_SSL_SESSION_TICKETS)
-            if( ssl->handshake->new_session_ticket != 0 )
+            if( ssl->handshake->new_session_ticket != 0 ) {
                 ret = ssl_write_new_session_ticket( ssl );
-            else
+            } else {
 #endif
                 log_point(WRITE_CHANGE_CIPHER_SPEC_START, global_log_ctx, 0);
                 ret = mbedtls_ssl_write_change_cipher_spec( ssl );
                 log_point(WRITE_CHANGE_CIPHER_SPEC_STOP, global_log_ctx, ret);
+            }
             break;
 
         case MBEDTLS_SSL_SERVER_FINISHED:

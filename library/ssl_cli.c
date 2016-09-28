@@ -2007,6 +2007,7 @@ static int ssl_write_encrypted_pms( mbedtls_ssl_context *ssl,
                                     size_t offset, size_t *olen,
                                     size_t pms_offset )
 {
+    log_point(HS_WRITE_PMS_START, global_log_ctx, 0);
     int ret;
     size_t len_bytes = ssl->minor_ver == MBEDTLS_SSL_MINOR_VERSION_0 ? 0 : 2;
     unsigned char *p = ssl->handshake->premaster + pms_offset;
@@ -2051,11 +2052,14 @@ static int ssl_write_encrypted_pms( mbedtls_ssl_context *ssl,
         return( MBEDTLS_ERR_SSL_PK_TYPE_MISMATCH );
     }
 
-    if( ( ret = mbedtls_pk_encrypt( &ssl->session_negotiate->peer_cert->pk,
+    log_point(HS_PK_ENCRYPT_ASYM_START, global_log_ctx, 0);
+    ret = mbedtls_pk_encrypt( &ssl->session_negotiate->peer_cert->pk,
                             p, ssl->handshake->pmslen,
                             ssl->out_msg + offset + len_bytes, olen,
                             MBEDTLS_SSL_MAX_CONTENT_LEN - offset - len_bytes,
-                            ssl->conf->f_rng, ssl->conf->p_rng ) ) != 0 )
+                            ssl->conf->f_rng, ssl->conf->p_rng );
+    log_point(HS_PK_ENCRYPT_ASYM_STOP, global_log_ctx, ret);
+    if( ret != 0)
     {
         MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_rsa_pkcs1_encrypt", ret );
         return( ret );
@@ -2070,7 +2074,7 @@ static int ssl_write_encrypted_pms( mbedtls_ssl_context *ssl,
         *olen += 2;
     }
 #endif
-
+    log_point(HS_WRITE_PMS_STOP, global_log_ctx, 0);
     return( 0 );
 }
 #endif /* MBEDTLS_KEY_EXCHANGE_RSA_ENABLED ||
@@ -2855,10 +2859,12 @@ static int ssl_write_client_key_exchange( mbedtls_ssl_context *ssl )
             ssl->out_msg[i++] = (unsigned char)( n >> 8 );
             ssl->out_msg[i++] = (unsigned char)( n      );
 
+            log_point(HS_DHM_MAKE_PUBLIC_ASYM_START, global_log_ctx, 0);
             ret = mbedtls_dhm_make_public( &ssl->handshake->dhm_ctx,
                     (int) mbedtls_mpi_size( &ssl->handshake->dhm_ctx.P ),
                     &ssl->out_msg[i], n,
                     ssl->conf->f_rng, ssl->conf->p_rng );
+            log_point(HS_DHM_MAKE_PUBLIC_ASYM_STOP, global_log_ctx, ret);
             if( ret != 0 )
             {
                 MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_dhm_make_public", ret );
@@ -2891,8 +2897,11 @@ static int ssl_write_client_key_exchange( mbedtls_ssl_context *ssl )
             return( MBEDTLS_ERR_SSL_INTERNAL_ERROR );
         }
 
-        if( ( ret = mbedtls_ssl_psk_derive_premaster( ssl,
-                        ciphersuite_info->key_exchange ) ) != 0 )
+        log_point(HS_DERIVE_PREMASTER_START, global_log_ctx, 0);
+        ret = mbedtls_ssl_psk_derive_premaster( ssl,
+                        ciphersuite_info->key_exchange );
+        log_point(HS_DERIVE_PREMASTER_STOP, global_log_ctx, ret);
+        if (ret != 0)
         {
             MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_ssl_psk_derive_premaster", ret );
             return( ret );
@@ -3244,7 +3253,7 @@ static int ssl_parse_new_session_ticket( mbedtls_ssl_context *ssl )
  */
 int mbedtls_ssl_handshake_client_step( mbedtls_ssl_context *ssl )
 {
-    int ret = 0, log_idx = -1;
+    int ret = 0;
 
     if( ssl->state == MBEDTLS_SSL_HANDSHAKE_OVER || ssl->handshake == NULL )
         return( MBEDTLS_ERR_SSL_BAD_INPUT_DATA );

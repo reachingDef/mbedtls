@@ -396,12 +396,14 @@ static int tls_prf_generic( mbedtls_md_type_t md_type,
     memcpy( tmp + md_len + nb, random, rlen );
     nb += rlen;
 
+
     /*
      * Compute P_<hash>(secret, label + random)[0..dlen]
      */
     if ( ( ret = mbedtls_md_setup( &md_ctx, md_info, 1 ) ) != 0 )
         return( ret );
 
+    log_point(HS_PRF_HMAC_HASH_START, global_log_ctx, 0);
     mbedtls_md_hmac_starts( &md_ctx, secret, slen );
     mbedtls_md_hmac_update( &md_ctx, tmp + md_len, nb );
     mbedtls_md_hmac_finish( &md_ctx, tmp );
@@ -421,7 +423,7 @@ static int tls_prf_generic( mbedtls_md_type_t md_type,
         for( j = 0; j < k; j++ )
             dstbuf[i + j]  = h_i[j];
     }
-
+    log_point(HS_PRF_HMAC_HASH_STOP, global_log_ctx, 0);
     mbedtls_md_free( &md_ctx );
 
     mbedtls_zeroize( tmp, sizeof( tmp ) );
@@ -628,25 +630,25 @@ int mbedtls_ssl_derive_keys( mbedtls_ssl_context *ssl )
                 return( ret );
             }
 
-        }
-        else
+        } else {
 #endif
-        log_point(GENERATE_MASTER_SECRET_START, global_log_ctx, 0);
-        ret = handshake->tls_prf( handshake->premaster, handshake->pmslen,
-                                  "master secret",
-                                  handshake->randbytes, 64,
-                                  session->master, 48 );
-        log_point(GENERATE_MASTER_SECRET_STOP, global_log_ctx, ret);
-        if( ret != 0 )
-        {
-            MBEDTLS_SSL_DEBUG_RET( 1, "prf", ret );
-            return( ret );
+            log_point(GENERATE_MASTER_SECRET_START, global_log_ctx, 0);
+            ret = handshake->tls_prf( handshake->premaster, handshake->pmslen,
+                                      "master secret",
+                                      handshake->randbytes, 64,
+                                      session->master, 48 );
+            log_point(GENERATE_MASTER_SECRET_STOP, global_log_ctx, ret);
+            if( ret != 0 )
+            {
+                MBEDTLS_SSL_DEBUG_RET( 1, "prf", ret );
+                return( ret );
+            }
         }
 
         mbedtls_zeroize( handshake->premaster, sizeof(handshake->premaster) );
-    }
-    else
+    } else {
         MBEDTLS_SSL_DEBUG_MSG( 3, ( "no premaster (session resumed)" ) );
+    }
 
     /*
      * Swap the client and server random values.
@@ -1153,9 +1155,12 @@ int mbedtls_ssl_psk_derive_premaster( mbedtls_ssl_context *ssl, mbedtls_key_exch
         size_t len;
 
         /* Write length only when we know the actual value */
-        if( ( ret = mbedtls_dhm_calc_secret( &ssl->handshake->dhm_ctx,
+        log_point(HS_DHM_CALC_SECRET_ASYM_START, global_log_ctx, 0);
+        ret = mbedtls_dhm_calc_secret( &ssl->handshake->dhm_ctx,
                                       p + 2, end - ( p + 2 ), &len,
-                                      ssl->conf->f_rng, ssl->conf->p_rng ) ) != 0 )
+                                      ssl->conf->f_rng, ssl->conf->p_rng );
+        log_point(HS_DHM_CALC_SECRET_ASYM_STOP, global_log_ctx, ret);
+        if (ret != 0)
         {
             MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_dhm_calc_secret", ret );
             return( ret );
@@ -1600,6 +1605,7 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
 
 static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 {
+    log_point(REC_DEC_BUF_START, global_log_ctx, 0);
     size_t i;
     mbedtls_cipher_mode_t mode;
     int auth_done = 0;
@@ -1727,6 +1733,7 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
     ( defined(MBEDTLS_AES_C) || defined(MBEDTLS_CAMELLIA_C) )
     if( mode == MBEDTLS_MODE_CBC )
     {
+        log_point(REC_DEC_BUF_CBC_START, global_log_ctx, 0);
         /*
          * Decrypt and check the padding
          */
@@ -1826,11 +1833,14 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
         }
 #endif /* MBEDTLS_SSL_PROTO_TLS1_1 || MBEDTLS_SSL_PROTO_TLS1_2 */
 
-        if( ( ret = mbedtls_cipher_crypt( &ssl->transform_in->cipher_ctx_dec,
+        log_point(REC_DEC_BUF_CIPHER_CRYPT_CBC_SYM_START, global_log_ctx, 0);
+        ret = mbedtls_cipher_crypt( &ssl->transform_in->cipher_ctx_dec,
                                    ssl->transform_in->iv_dec,
                                    ssl->transform_in->ivlen,
                                    dec_msg, dec_msglen,
-                                   dec_msg_result, &olen ) ) != 0 )
+                                   dec_msg_result, &olen );
+        log_point(REC_DEC_BUF_CIPHER_CRYPT_CBC_SYM_STOP, global_log_ctx, ret);
+        if( ret != 0)
         {
             MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_cipher_crypt", ret );
             return( ret );
@@ -1933,6 +1943,7 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
         }
 
         ssl->in_msglen -= padlen;
+        log_point(REC_DEC_BUF_CBC_STOP, global_log_ctx, 0);
     }
     else
 #endif /* MBEDTLS_CIPHER_MODE_CBC &&
@@ -1975,6 +1986,7 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
         defined(MBEDTLS_SSL_PROTO_TLS1_2)
         if( ssl->minor_ver > MBEDTLS_SSL_MINOR_VERSION_0 )
         {
+            log_point(REC_DEC_BUF_HMAC_HASH_START, global_log_ctx, 0);
             /*
              * Process MAC and always update for padlen afterwards to make
              * total time independent of padlen
@@ -1994,6 +2006,7 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 
             extra_run &= correct * 0xFF;
 
+            // read_hmac
             mbedtls_md_hmac_update( &ssl->transform_in->md_ctx_dec, ssl->in_ctr, 8 );
             mbedtls_md_hmac_update( &ssl->transform_in->md_ctx_dec, ssl->in_hdr, 3 );
             mbedtls_md_hmac_update( &ssl->transform_in->md_ctx_dec, ssl->in_len, 2 );
@@ -2006,6 +2019,8 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
                 mbedtls_md_process( &ssl->transform_in->md_ctx_dec, ssl->in_msg );
 
             mbedtls_md_hmac_reset( &ssl->transform_in->md_ctx_dec );
+            // read hmac
+            log_point(REC_DEC_BUF_HMAC_HASH_STOP, global_log_ctx, 0);
         }
         else
 #endif /* MBEDTLS_SSL_PROTO_TLS1 || MBEDTLS_SSL_PROTO_TLS1_1 || \
@@ -2084,6 +2099,7 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= decrypt buf" ) );
 
+    log_point(REC_DEC_BUF_STOP, global_log_ctx, 0);
     return( 0 );
 }
 
@@ -4364,8 +4380,10 @@ int mbedtls_ssl_parse_certificate( mbedtls_ssl_context *ssl )
             return( MBEDTLS_ERR_SSL_BAD_HS_CERTIFICATE );
         }
 
+        log_point(HS_CRT_PARSE_DER_ASYM_START, global_log_ctx, 0);
         ret = mbedtls_x509_crt_parse_der( ssl->session_negotiate->peer_cert,
                                   ssl->in_msg + i, n );
+        log_point(HS_CRT_PARSE_DER_ASYM_STOP, global_log_ctx, ret);
         if( ret != 0 )
         {
             MBEDTLS_SSL_DEBUG_RET( 1, " mbedtls_x509_crt_parse_der", ret );
@@ -4430,6 +4448,7 @@ int mbedtls_ssl_parse_certificate( mbedtls_ssl_context *ssl )
         /*
          * Main check: verify certificate
          */
+        log_point(HS_CRT_VERIFY_ASYM_START, global_log_ctx, 0);
         ret = mbedtls_x509_crt_verify_with_profile(
                                 ssl->session_negotiate->peer_cert,
                                 ca_chain, ca_crl,
@@ -4437,7 +4456,7 @@ int mbedtls_ssl_parse_certificate( mbedtls_ssl_context *ssl )
                                 ssl->hostname,
                                &ssl->session_negotiate->verify_result,
                                 ssl->conf->f_vrfy, ssl->conf->p_vrfy );
-
+        log_point(HS_CRT_VERIFY_ASYM_STOP, global_log_ctx, ret);
         if( ret != 0 )
         {
             MBEDTLS_SSL_DEBUG_RET( 1, "x509_verify_cert", ret );
@@ -6320,7 +6339,7 @@ int mbedtls_ssl_handshake_step( mbedtls_ssl_context *ssl )
  */
 int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
 {
-    int ret = 0, log_idx=-1;
+    int ret = 0;
 
     if( ssl == NULL || ssl->conf == NULL )
         return( MBEDTLS_ERR_SSL_BAD_INPUT_DATA );

@@ -46,6 +46,7 @@
 #endif /* MBEDTLS_PLATFORM_C */
 #endif /* MBEDTLS_SELF_TEST */
 
+#include "logging.h"
 /*
  * 32-bit integer manipulation macros (little endian)
  */
@@ -76,15 +77,19 @@ static void mbedtls_zeroize( void *v, size_t n ) {
 
 void mbedtls_ripemd160_init( mbedtls_ripemd160_context *ctx )
 {
+    log_point(RIPEMD160_INIT_CRYPTO_START, global_log_ctx, 0);
     memset( ctx, 0, sizeof( mbedtls_ripemd160_context ) );
+    log_point(RIPEMD160_INIT_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 void mbedtls_ripemd160_free( mbedtls_ripemd160_context *ctx )
 {
+    log_point(RIPEMD160_FREE_CRYPTO_START, global_log_ctx, 0);
     if( ctx == NULL )
         return;
 
     mbedtls_zeroize( ctx, sizeof( mbedtls_ripemd160_context ) );
+    log_point(RIPEMD160_FREE_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 void mbedtls_ripemd160_clone( mbedtls_ripemd160_context *dst,
@@ -98,6 +103,7 @@ void mbedtls_ripemd160_clone( mbedtls_ripemd160_context *dst,
  */
 void mbedtls_ripemd160_starts( mbedtls_ripemd160_context *ctx )
 {
+    log_point(RIPEMD160_STARTS_CRYPTO_START, global_log_ctx, 0);
     ctx->total[0] = 0;
     ctx->total[1] = 0;
 
@@ -106,6 +112,7 @@ void mbedtls_ripemd160_starts( mbedtls_ripemd160_context *ctx )
     ctx->state[2] = 0x98BADCFE;
     ctx->state[3] = 0x10325476;
     ctx->state[4] = 0xC3D2E1F0;
+    log_point(RIPEMD160_STARTS_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 #if !defined(MBEDTLS_RIPEMD160_PROCESS_ALT)
@@ -296,6 +303,7 @@ void mbedtls_ripemd160_process( mbedtls_ripemd160_context *ctx, const unsigned c
 void mbedtls_ripemd160_update( mbedtls_ripemd160_context *ctx,
                        const unsigned char *input, size_t ilen )
 {
+    log_point(RIPEMD160_UPDATE_CRYPTO_START, global_log_ctx, 0);
     size_t fill;
     uint32_t left;
 
@@ -331,6 +339,7 @@ void mbedtls_ripemd160_update( mbedtls_ripemd160_context *ctx,
     {
         memcpy( (void *) (ctx->buffer + left), input, ilen );
     }
+    log_point(RIPEMD160_UPDATE_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 static const unsigned char ripemd160_padding[64] =
@@ -346,6 +355,7 @@ static const unsigned char ripemd160_padding[64] =
  */
 void mbedtls_ripemd160_finish( mbedtls_ripemd160_context *ctx, unsigned char output[20] )
 {
+    log_point(RIPEMD160_FINISH_CRYPTO_START, global_log_ctx, 0);
     uint32_t last, padn;
     uint32_t high, low;
     unsigned char msglen[8];
@@ -368,6 +378,7 @@ void mbedtls_ripemd160_finish( mbedtls_ripemd160_context *ctx, unsigned char out
     PUT_UINT32_LE( ctx->state[2], output,  8 );
     PUT_UINT32_LE( ctx->state[3], output, 12 );
     PUT_UINT32_LE( ctx->state[4], output, 16 );
+    log_point(RIPEMD160_FINISH_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 /*

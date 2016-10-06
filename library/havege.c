@@ -39,6 +39,7 @@
 
 #include <string.h>
 
+#include "logging.h"
 /* Implementation that should never be optimized out by the compiler */
 static void mbedtls_zeroize( void *v, size_t n ) {
     volatile unsigned char *p = v; while( n-- ) *p++ = 0;
@@ -196,17 +197,21 @@ static void havege_fill( mbedtls_havege_state *hs )
  */
 void mbedtls_havege_init( mbedtls_havege_state *hs )
 {
+    log_point(HAVEGE_INIT_CRYPTO_START, global_log_ctx, 0);
     memset( hs, 0, sizeof( mbedtls_havege_state ) );
 
     havege_fill( hs );
+    log_point(HAVEGE_INIT_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 void mbedtls_havege_free( mbedtls_havege_state *hs )
 {
+    log_point(HAVEGE_FREE_CRYPTO_START, global_log_ctx, 0);
     if( hs == NULL )
         return;
 
     mbedtls_zeroize( hs, sizeof( mbedtls_havege_state ) );
+    log_point(HAVEGE_FREE_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 /*
@@ -214,6 +219,7 @@ void mbedtls_havege_free( mbedtls_havege_state *hs )
  */
 int mbedtls_havege_random( void *p_rng, unsigned char *buf, size_t len )
 {
+    log_point(HAVEGE_RANDOM_CRYPTO_START, global_log_ctx, 0);
     int val;
     size_t use_len;
     mbedtls_havege_state *hs = (mbedtls_havege_state *) p_rng;
@@ -237,6 +243,7 @@ int mbedtls_havege_random( void *p_rng, unsigned char *buf, size_t len )
         p += use_len;
     }
 
+    log_point(HAVEGE_RANDOM_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 

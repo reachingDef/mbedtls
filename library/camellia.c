@@ -46,6 +46,7 @@
 #endif /* MBEDTLS_PLATFORM_C */
 #endif /* MBEDTLS_SELF_TEST */
 
+#include "logging.h"
 #if !defined(MBEDTLS_CAMELLIA_ALT)
 
 /* Implementation that should never be optimized out by the compiler */
@@ -325,15 +326,19 @@ static void camellia_feistel( const uint32_t x[2], const uint32_t k[2],
 
 void mbedtls_camellia_init( mbedtls_camellia_context *ctx )
 {
+    log_point(CAMELLIA_INIT_CRYPTO_START, global_log_ctx, 0);
     memset( ctx, 0, sizeof( mbedtls_camellia_context ) );
+    log_point(CAMELLIA_INIT_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 void mbedtls_camellia_free( mbedtls_camellia_context *ctx )
 {
+    log_point(CAMELLIA_FREE_CRYPTO_START, global_log_ctx, 0);
     if( ctx == NULL )
         return;
 
     mbedtls_zeroize( ctx, sizeof( mbedtls_camellia_context ) );
+    log_point(CAMELLIA_FREE_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 /*
@@ -342,6 +347,7 @@ void mbedtls_camellia_free( mbedtls_camellia_context *ctx )
 int mbedtls_camellia_setkey_enc( mbedtls_camellia_context *ctx, const unsigned char *key,
                          unsigned int keybits )
 {
+    log_point(CAMELLIA_SETKEY_ENC_CRYPTO_START, global_log_ctx, 0);
     int idx;
     size_t i;
     uint32_t *RK;
@@ -438,6 +444,7 @@ int mbedtls_camellia_setkey_enc( mbedtls_camellia_context *ctx, const unsigned c
         }
     }
 
+    log_point(CAMELLIA_SETKEY_ENC_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 
@@ -447,6 +454,7 @@ int mbedtls_camellia_setkey_enc( mbedtls_camellia_context *ctx, const unsigned c
 int mbedtls_camellia_setkey_dec( mbedtls_camellia_context *ctx, const unsigned char *key,
                          unsigned int keybits )
 {
+    log_point(CAMELLIA_SETKEY_DEC_CRYPTO_START, global_log_ctx, 0);
     int idx, ret;
     size_t i;
     mbedtls_camellia_context cty;
@@ -486,6 +494,7 @@ int mbedtls_camellia_setkey_dec( mbedtls_camellia_context *ctx, const unsigned c
 exit:
     mbedtls_camellia_free( &cty );
 
+    log_point(CAMELLIA_SETKEY_DEC_CRYPTO_STOP, global_log_ctx, 0);
     return( ret );
 }
 
@@ -497,6 +506,7 @@ int mbedtls_camellia_crypt_ecb( mbedtls_camellia_context *ctx,
                     const unsigned char input[16],
                     unsigned char output[16] )
 {
+    log_point(CAMELLIA_CRYPT_ECB_CRYPTO_START, global_log_ctx, 0);
     int NR;
     uint32_t *RK, X[4];
 
@@ -548,6 +558,7 @@ int mbedtls_camellia_crypt_ecb( mbedtls_camellia_context *ctx,
     PUT_UINT32_BE( X[0], output,  8 );
     PUT_UINT32_BE( X[1], output, 12 );
 
+    log_point(CAMELLIA_CRYPT_ECB_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 
@@ -562,6 +573,7 @@ int mbedtls_camellia_crypt_cbc( mbedtls_camellia_context *ctx,
                     const unsigned char *input,
                     unsigned char *output )
 {
+    log_point(CAMELLIA_CRYPT_CBC_CRYPTO_START, global_log_ctx, 0);
     int i;
     unsigned char temp[16];
 
@@ -600,7 +612,7 @@ int mbedtls_camellia_crypt_cbc( mbedtls_camellia_context *ctx,
             length -= 16;
         }
     }
-
+    log_point(CAMELLIA_CRYPT_CBC_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 #endif /* MBEDTLS_CIPHER_MODE_CBC */
@@ -617,6 +629,7 @@ int mbedtls_camellia_crypt_cfb128( mbedtls_camellia_context *ctx,
                        const unsigned char *input,
                        unsigned char *output )
 {
+    log_point(CAMELLIA_CRYPT_CFB128_CRYPTO_START, global_log_ctx, 0);
     int c;
     size_t n = *iv_off;
 
@@ -649,6 +662,7 @@ int mbedtls_camellia_crypt_cfb128( mbedtls_camellia_context *ctx,
 
     *iv_off = n;
 
+    log_point(CAMELLIA_CRYPT_CFB128_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 #endif /* MBEDTLS_CIPHER_MODE_CFB */
@@ -665,6 +679,7 @@ int mbedtls_camellia_crypt_ctr( mbedtls_camellia_context *ctx,
                        const unsigned char *input,
                        unsigned char *output )
 {
+    log_point(CAMELLIA_CRYPT_CTR_CRYPTO_START, global_log_ctx, 0);
     int c, i;
     size_t n = *nc_off;
 
@@ -686,6 +701,7 @@ int mbedtls_camellia_crypt_ctr( mbedtls_camellia_context *ctx,
 
     *nc_off = n;
 
+    log_point(CAMELLIA_CRYPT_CTR_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 #endif /* MBEDTLS_CIPHER_MODE_CTR */

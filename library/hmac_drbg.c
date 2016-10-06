@@ -50,6 +50,8 @@
 #endif /* MBEDTLS_SELF_TEST */
 #endif /* MBEDTLS_PLATFORM_C */
 
+#include "logging.h"
+
 /* Implementation that should never be optimized out by the compiler */
 static void mbedtls_zeroize( void *v, size_t n ) {
     volatile unsigned char *p = v; while( n-- ) *p++ = 0;
@@ -60,11 +62,13 @@ static void mbedtls_zeroize( void *v, size_t n ) {
  */
 void mbedtls_hmac_drbg_init( mbedtls_hmac_drbg_context *ctx )
 {
+    log_point(HMAC_DRBG_INIT_CRYPTO_START, global_log_ctx, 0);
     memset( ctx, 0, sizeof( mbedtls_hmac_drbg_context ) );
 
 #if defined(MBEDTLS_THREADING_C)
     mbedtls_mutex_init( &ctx->mutex );
 #endif
+    log_point(HMAC_DRBG_INIT_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 /*
@@ -73,6 +77,7 @@ void mbedtls_hmac_drbg_init( mbedtls_hmac_drbg_context *ctx )
 void mbedtls_hmac_drbg_update( mbedtls_hmac_drbg_context *ctx,
                        const unsigned char *additional, size_t add_len )
 {
+    log_point(HMAC_DRBG_UPDATE_CRYPTO_START, global_log_ctx, 0);
     size_t md_len = mbedtls_md_get_size( ctx->md_ctx.md_info );
     unsigned char rounds = ( additional != NULL && add_len != 0 ) ? 2 : 1;
     unsigned char sep[1];
@@ -93,6 +98,7 @@ void mbedtls_hmac_drbg_update( mbedtls_hmac_drbg_context *ctx,
         mbedtls_md_hmac_update( &ctx->md_ctx, ctx->V, md_len );
         mbedtls_md_hmac_finish( &ctx->md_ctx, ctx->V );
     }
+    log_point(HMAC_DRBG_UPDATE_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 /*
@@ -102,6 +108,7 @@ int mbedtls_hmac_drbg_seed_buf( mbedtls_hmac_drbg_context *ctx,
                         const mbedtls_md_info_t * md_info,
                         const unsigned char *data, size_t data_len )
 {
+    log_point(HMAC_DRBG_SEED_BUF_CRYPTO_START, global_log_ctx, 0);
     int ret;
 
     if( ( ret = mbedtls_md_setup( &ctx->md_ctx, md_info, 1 ) ) != 0 )
@@ -117,6 +124,7 @@ int mbedtls_hmac_drbg_seed_buf( mbedtls_hmac_drbg_context *ctx,
 
     mbedtls_hmac_drbg_update( ctx, data, data_len );
 
+    log_point(HMAC_DRBG_SEED_BUF_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 
@@ -126,6 +134,7 @@ int mbedtls_hmac_drbg_seed_buf( mbedtls_hmac_drbg_context *ctx,
 int mbedtls_hmac_drbg_reseed( mbedtls_hmac_drbg_context *ctx,
                       const unsigned char *additional, size_t len )
 {
+    log_point(HMAC_DRBG_RESEED_CRYPTO_START, global_log_ctx, 0);
     unsigned char seed[MBEDTLS_HMAC_DRBG_MAX_SEED_INPUT];
     size_t seedlen;
 
@@ -157,6 +166,7 @@ int mbedtls_hmac_drbg_reseed( mbedtls_hmac_drbg_context *ctx,
     /* 3. Reset reseed_counter */
     ctx->reseed_counter = 1;
 
+    log_point(HMAC_DRBG_RESEED_CRYPTO_STOP, global_log_ctx, 0);
     /* 4. Done */
     return( 0 );
 }
@@ -171,6 +181,7 @@ int mbedtls_hmac_drbg_seed( mbedtls_hmac_drbg_context *ctx,
                     const unsigned char *custom,
                     size_t len )
 {
+    log_point(HMAC_DRBG_SEED_CRYPTO_START, global_log_ctx, 0);
     int ret;
     size_t entropy_len, md_size;
 
@@ -214,6 +225,7 @@ int mbedtls_hmac_drbg_seed( mbedtls_hmac_drbg_context *ctx,
 
     ctx->entropy_len = entropy_len;
 
+    log_point(HMAC_DRBG_SEED_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 
@@ -250,6 +262,7 @@ int mbedtls_hmac_drbg_random_with_add( void *p_rng,
                                unsigned char *output, size_t out_len,
                                const unsigned char *additional, size_t add_len )
 {
+    log_point(HMAC_DRBG_RANDOM_WITH_ADD_CRYPTO_START, global_log_ctx, 0);
     int ret;
     mbedtls_hmac_drbg_context *ctx = (mbedtls_hmac_drbg_context *) p_rng;
     size_t md_len = mbedtls_md_get_size( ctx->md_ctx.md_info );
@@ -299,6 +312,7 @@ int mbedtls_hmac_drbg_random_with_add( void *p_rng,
     /* 7. Update reseed counter */
     ctx->reseed_counter++;
 
+    log_point(HMAC_DRBG_RANDOM_WITH_ADD_CRYPTO_STOP, global_log_ctx, 0);
     /* 8. Done */
     return( 0 );
 }
@@ -308,6 +322,7 @@ int mbedtls_hmac_drbg_random_with_add( void *p_rng,
  */
 int mbedtls_hmac_drbg_random( void *p_rng, unsigned char *output, size_t out_len )
 {
+    log_point(HMAC_DRBG_RANDOM_CRYPTO_START, global_log_ctx, 0);
     int ret;
     mbedtls_hmac_drbg_context *ctx = (mbedtls_hmac_drbg_context *) p_rng;
 
@@ -323,6 +338,7 @@ int mbedtls_hmac_drbg_random( void *p_rng, unsigned char *output, size_t out_len
         return( MBEDTLS_ERR_THREADING_MUTEX_ERROR );
 #endif
 
+    log_point(HMAC_DRBG_RANDOM_CRYPTO_STOP, global_log_ctx, 0);
     return( ret );
 }
 
@@ -331,6 +347,7 @@ int mbedtls_hmac_drbg_random( void *p_rng, unsigned char *output, size_t out_len
  */
 void mbedtls_hmac_drbg_free( mbedtls_hmac_drbg_context *ctx )
 {
+    log_point(HMAC_DRBG_FREE_CRYPTO_START, global_log_ctx, 0);
     if( ctx == NULL )
         return;
 
@@ -339,6 +356,7 @@ void mbedtls_hmac_drbg_free( mbedtls_hmac_drbg_context *ctx )
 #endif
     mbedtls_md_free( &ctx->md_ctx );
     mbedtls_zeroize( ctx, sizeof( mbedtls_hmac_drbg_context ) );
+    log_point(HMAC_DRBG_FREE_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 #if defined(MBEDTLS_FS_IO)

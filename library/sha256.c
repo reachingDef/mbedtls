@@ -45,6 +45,7 @@
 #endif /* MBEDTLS_PLATFORM_C */
 #endif /* MBEDTLS_SELF_TEST */
 
+#include "logging.h"
 #if !defined(MBEDTLS_SHA256_ALT)
 
 /* Implementation that should never be optimized out by the compiler */
@@ -77,15 +78,19 @@ do {                                                    \
 
 void mbedtls_sha256_init( mbedtls_sha256_context *ctx )
 {
+    log_point(SHA256_INIT_CRYPTO_START, global_log_ctx, 0);
     memset( ctx, 0, sizeof( mbedtls_sha256_context ) );
+    log_point(SHA256_INIT_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 void mbedtls_sha256_free( mbedtls_sha256_context *ctx )
 {
+    log_point(SHA256_FREE_CRYPTO_START, global_log_ctx, 0);
     if( ctx == NULL )
         return;
 
     mbedtls_zeroize( ctx, sizeof( mbedtls_sha256_context ) );
+    log_point(SHA256_FREE_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 void mbedtls_sha256_clone( mbedtls_sha256_context *dst,
@@ -99,6 +104,7 @@ void mbedtls_sha256_clone( mbedtls_sha256_context *dst,
  */
 void mbedtls_sha256_starts( mbedtls_sha256_context *ctx, int is224 )
 {
+    log_point(SHA256_STARTS_CRYPTO_START, global_log_ctx, 0);
     ctx->total[0] = 0;
     ctx->total[1] = 0;
 
@@ -128,6 +134,7 @@ void mbedtls_sha256_starts( mbedtls_sha256_context *ctx, int is224 )
     }
 
     ctx->is224 = is224;
+    log_point(SHA256_STARTS_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 #if !defined(MBEDTLS_SHA256_PROCESS_ALT)
@@ -238,6 +245,7 @@ void mbedtls_sha256_process( mbedtls_sha256_context *ctx, const unsigned char da
 void mbedtls_sha256_update( mbedtls_sha256_context *ctx, const unsigned char *input,
                     size_t ilen )
 {
+    log_point(SHA256_UPDATE_CRYPTO_START, global_log_ctx, 0);
     size_t fill;
     uint32_t left;
 
@@ -271,6 +279,7 @@ void mbedtls_sha256_update( mbedtls_sha256_context *ctx, const unsigned char *in
 
     if( ilen > 0 )
         memcpy( (void *) (ctx->buffer + left), input, ilen );
+    log_point(SHA256_UPDATE_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 static const unsigned char sha256_padding[64] =
@@ -286,6 +295,7 @@ static const unsigned char sha256_padding[64] =
  */
 void mbedtls_sha256_finish( mbedtls_sha256_context *ctx, unsigned char output[32] )
 {
+    log_point(SHA256_FINISH_CRYPTO_START, global_log_ctx, 0);
     uint32_t last, padn;
     uint32_t high, low;
     unsigned char msglen[8];
@@ -313,6 +323,7 @@ void mbedtls_sha256_finish( mbedtls_sha256_context *ctx, unsigned char output[32
 
     if( ctx->is224 == 0 )
         PUT_UINT32_BE( ctx->state[7], output, 28 );
+    log_point(SHA256_FINISH_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 #endif /* !MBEDTLS_SHA256_ALT */

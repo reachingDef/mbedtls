@@ -45,6 +45,8 @@
 #endif /* MBEDTLS_PLATFORM_C */
 #endif /* MBEDTLS_SELF_TEST */
 
+#include "logging.h"
+
 #if !defined(MBEDTLS_SHA1_ALT)
 
 /* Implementation that should never be optimized out by the compiler */
@@ -77,15 +79,19 @@ static void mbedtls_zeroize( void *v, size_t n ) {
 
 void mbedtls_sha1_init( mbedtls_sha1_context *ctx )
 {
+    log_point(SHA1_INIT_CRYPTO_START, global_log_ctx, 0);
     memset( ctx, 0, sizeof( mbedtls_sha1_context ) );
+    log_point(SHA1_INIT_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 void mbedtls_sha1_free( mbedtls_sha1_context *ctx )
 {
+    log_point(SHA1_FREE_CRYPTO_START, global_log_ctx, 0);
     if( ctx == NULL )
         return;
 
     mbedtls_zeroize( ctx, sizeof( mbedtls_sha1_context ) );
+    log_point(SHA1_FREE_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 void mbedtls_sha1_clone( mbedtls_sha1_context *dst,
@@ -99,6 +105,7 @@ void mbedtls_sha1_clone( mbedtls_sha1_context *dst,
  */
 void mbedtls_sha1_starts( mbedtls_sha1_context *ctx )
 {
+    log_point(SHA1_STARTS_CRYPTO_START, global_log_ctx, 0);
     ctx->total[0] = 0;
     ctx->total[1] = 0;
 
@@ -107,6 +114,7 @@ void mbedtls_sha1_starts( mbedtls_sha1_context *ctx )
     ctx->state[2] = 0x98BADCFE;
     ctx->state[3] = 0x10325476;
     ctx->state[4] = 0xC3D2E1F0;
+    log_point(SHA1_STARTS_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 #if !defined(MBEDTLS_SHA1_PROCESS_ALT)
@@ -272,6 +280,7 @@ void mbedtls_sha1_process( mbedtls_sha1_context *ctx, const unsigned char data[6
  */
 void mbedtls_sha1_update( mbedtls_sha1_context *ctx, const unsigned char *input, size_t ilen )
 {
+    log_point(SHA1_UPDATE_CRYPTO_START, global_log_ctx, 0);
     size_t fill;
     uint32_t left;
 
@@ -305,6 +314,7 @@ void mbedtls_sha1_update( mbedtls_sha1_context *ctx, const unsigned char *input,
 
     if( ilen > 0 )
         memcpy( (void *) (ctx->buffer + left), input, ilen );
+    log_point(SHA1_UPDATE_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 static const unsigned char sha1_padding[64] =
@@ -320,6 +330,7 @@ static const unsigned char sha1_padding[64] =
  */
 void mbedtls_sha1_finish( mbedtls_sha1_context *ctx, unsigned char output[20] )
 {
+    log_point(SHA1_FINISH_CRYPTO_START, global_log_ctx, 0);
     uint32_t last, padn;
     uint32_t high, low;
     unsigned char msglen[8];
@@ -342,6 +353,7 @@ void mbedtls_sha1_finish( mbedtls_sha1_context *ctx, unsigned char output[20] )
     PUT_UINT32_BE( ctx->state[2], output,  8 );
     PUT_UINT32_BE( ctx->state[3], output, 12 );
     PUT_UINT32_BE( ctx->state[4], output, 16 );
+    log_point(SHA1_FINISH_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 #endif /* !MBEDTLS_SHA1_ALT */

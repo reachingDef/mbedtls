@@ -329,7 +329,7 @@ void mbedtls_des3_init( mbedtls_des3_context *ctx )
 {
     log_point(DES3_INIT_CRYPTO_START, global_log_ctx, 0);
     memset( ctx, 0, sizeof( mbedtls_des3_context ) );
-    log_point(DES3_INIT_CRYPTO_START, global_log_ctx, 0);
+    log_point(DES3_INIT_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 void mbedtls_des3_free( mbedtls_des3_context *ctx )

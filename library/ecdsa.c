@@ -42,6 +42,8 @@
 #include "mbedtls/hmac_drbg.h"
 #endif
 
+#include "logging.h"
+
 /*
  * Derive a suitable integer for group grp from a buffer of length len
  * SEC1 4.1.3 step 5 aka SEC1 4.1.4 step 3
@@ -73,6 +75,7 @@ int mbedtls_ecdsa_sign( mbedtls_ecp_group *grp, mbedtls_mpi *r, mbedtls_mpi *s,
                 const mbedtls_mpi *d, const unsigned char *buf, size_t blen,
                 int (*f_rng)(void *, unsigned char *, size_t), void *p_rng )
 {
+    log_point(ECDSA_SIGN_CRYPTO_START, global_log_ctx, 0);
     int ret, key_tries, sign_tries, blind_tries;
     mbedtls_ecp_point R;
     mbedtls_mpi k, e, t;
@@ -151,6 +154,7 @@ cleanup:
     mbedtls_ecp_point_free( &R );
     mbedtls_mpi_free( &k ); mbedtls_mpi_free( &e ); mbedtls_mpi_free( &t );
 
+    log_point(ECDSA_SIGN_CRYPTO_STOP, global_log_ctx, 0);
     return( ret );
 }
 
@@ -162,6 +166,7 @@ int mbedtls_ecdsa_sign_det( mbedtls_ecp_group *grp, mbedtls_mpi *r, mbedtls_mpi 
                     const mbedtls_mpi *d, const unsigned char *buf, size_t blen,
                     mbedtls_md_type_t md_alg )
 {
+    log_point(ECDSA_SIGN_DET_CRYPTO_START, global_log_ctx, 0);
     int ret;
     mbedtls_hmac_drbg_context rng_ctx;
     unsigned char data[2 * MBEDTLS_ECP_MAX_BYTES];
@@ -188,6 +193,7 @@ cleanup:
     mbedtls_hmac_drbg_free( &rng_ctx );
     mbedtls_mpi_free( &h );
 
+    log_point(ECDSA_SIGN_DET_CRYPTO_STOP, global_log_ctx, 0);
     return( ret );
 }
 #endif /* MBEDTLS_ECDSA_DETERMINISTIC */
@@ -200,6 +206,7 @@ int mbedtls_ecdsa_verify( mbedtls_ecp_group *grp,
                   const unsigned char *buf, size_t blen,
                   const mbedtls_ecp_point *Q, const mbedtls_mpi *r, const mbedtls_mpi *s)
 {
+    log_point(ECDSA_VERIFY_CRYPTO_START, global_log_ctx, 0);
     int ret;
     mbedtls_mpi e, s_inv, u1, u2;
     mbedtls_ecp_point R;
@@ -275,6 +282,7 @@ cleanup:
     mbedtls_ecp_point_free( &R );
     mbedtls_mpi_free( &e ); mbedtls_mpi_free( &s_inv ); mbedtls_mpi_free( &u1 ); mbedtls_mpi_free( &u2 );
 
+    log_point(ECDSA_VERIFY_CRYPTO_STOP, global_log_ctx, 0);
     return( ret );
 }
 
@@ -311,6 +319,7 @@ int mbedtls_ecdsa_write_signature( mbedtls_ecdsa_context *ctx, mbedtls_md_type_t
                            int (*f_rng)(void *, unsigned char *, size_t),
                            void *p_rng )
 {
+    log_point(ECDSA_WRITE_SIGNATURE_CRYPTO_START, global_log_ctx, 0);
     int ret;
     mbedtls_mpi r, s;
 
@@ -336,6 +345,7 @@ cleanup:
     mbedtls_mpi_free( &r );
     mbedtls_mpi_free( &s );
 
+    log_point(ECDSA_WRITE_SIGNATURE_CRYPTO_STOP, global_log_ctx, 0);
     return( ret );
 }
 
@@ -358,6 +368,7 @@ int mbedtls_ecdsa_read_signature( mbedtls_ecdsa_context *ctx,
                           const unsigned char *hash, size_t hlen,
                           const unsigned char *sig, size_t slen )
 {
+    log_point(ECDSA_READ_SIGNATURE_CRYPTO_START, global_log_ctx, 0);
     int ret;
     unsigned char *p = (unsigned char *) sig;
     const unsigned char *end = sig + slen;
@@ -399,6 +410,7 @@ cleanup:
     mbedtls_mpi_free( &r );
     mbedtls_mpi_free( &s );
 
+    log_point(ECDSA_READ_SIGNATURE_CRYPTO_STOP, global_log_ctx, 0);
     return( ret );
 }
 
@@ -408,8 +420,11 @@ cleanup:
 int mbedtls_ecdsa_genkey( mbedtls_ecdsa_context *ctx, mbedtls_ecp_group_id gid,
                   int (*f_rng)(void *, unsigned char *, size_t), void *p_rng )
 {
-    return( mbedtls_ecp_group_load( &ctx->grp, gid ) ||
-            mbedtls_ecp_gen_keypair( &ctx->grp, &ctx->d, &ctx->Q, f_rng, p_rng ) );
+    log_point(ECDSA_GENKEY_CRYPTO_START, global_log_ctx, 0);
+    int ret = mbedtls_ecp_group_load( &ctx->grp, gid ) ||
+            mbedtls_ecp_gen_keypair( &ctx->grp, &ctx->d, &ctx->Q, f_rng, p_rng );
+    log_point(ECDSA_GENKEY_CRYPTO_STOP, global_log_ctx, 0);
+    return(ret);
 }
 
 /*
@@ -417,6 +432,7 @@ int mbedtls_ecdsa_genkey( mbedtls_ecdsa_context *ctx, mbedtls_ecp_group_id gid,
  */
 int mbedtls_ecdsa_from_keypair( mbedtls_ecdsa_context *ctx, const mbedtls_ecp_keypair *key )
 {
+    log_point(ECDSA_FROM_KEYPAIR_CRYPTO_START, global_log_ctx, 0);
     int ret;
 
     if( ( ret = mbedtls_ecp_group_copy( &ctx->grp, &key->grp ) ) != 0 ||
@@ -425,7 +441,7 @@ int mbedtls_ecdsa_from_keypair( mbedtls_ecdsa_context *ctx, const mbedtls_ecp_ke
     {
         mbedtls_ecdsa_free( ctx );
     }
-
+    log_point(ECDSA_FROM_KEYPAIR_CRYPTO_STOP, global_log_ctx, 0);
     return( ret );
 }
 
@@ -434,7 +450,9 @@ int mbedtls_ecdsa_from_keypair( mbedtls_ecdsa_context *ctx, const mbedtls_ecp_ke
  */
 void mbedtls_ecdsa_init( mbedtls_ecdsa_context *ctx )
 {
+    log_point(ECDSA_INIT_CRYPTO_START, global_log_ctx, 0);
     mbedtls_ecp_keypair_init( ctx );
+    log_point(ECDSA_INIT_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 /*
@@ -442,7 +460,10 @@ void mbedtls_ecdsa_init( mbedtls_ecdsa_context *ctx )
  */
 void mbedtls_ecdsa_free( mbedtls_ecdsa_context *ctx )
 {
+    log_point(ECDSA_FREE_CRYPTO_START, global_log_ctx, 0);
+    mbedtls_ecp_keypair_init( ctx );
     mbedtls_ecp_keypair_free( ctx );
+    log_point(ECDSA_FREE_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 #endif /* MBEDTLS_ECDSA_C */

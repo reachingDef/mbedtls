@@ -70,6 +70,8 @@ set(src_x509
     x509write_csr.c
 )
 
+include_directories ("../../src/")
+
 set(src_tls
     debug.c
     net_sockets.c
@@ -80,6 +82,7 @@ set(src_tls
     ssl_srv.c
     ssl_ticket.c
     ssl_tls.c
+	../../src/logging.c
 )
 
 if(CMAKE_COMPILER_IS_GNUCC)

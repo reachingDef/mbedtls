@@ -46,6 +46,8 @@
 #endif /* MBEDTLS_PLATFORM_C */
 #endif /* MBEDTLS_SELF_TEST */
 
+#include "logging.h"
+
 #if !defined(MBEDTLS_DES_ALT)
 
 /* Implementation that should never be optimized out by the compiler */
@@ -308,28 +310,36 @@ static const uint32_t RHs[16] =
 
 void mbedtls_des_init( mbedtls_des_context *ctx )
 {
+    log_point(DES_INIT_CRYPTO_START, global_log_ctx, 0);
     memset( ctx, 0, sizeof( mbedtls_des_context ) );
+    log_point(DES_INIT_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 void mbedtls_des_free( mbedtls_des_context *ctx )
 {
+    log_point(DES_FREE_CRYPTO_START, global_log_ctx, 0);
     if( ctx == NULL )
         return;
 
     mbedtls_zeroize( ctx, sizeof( mbedtls_des_context ) );
+    log_point(DES_FREE_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 void mbedtls_des3_init( mbedtls_des3_context *ctx )
 {
+    log_point(DES3_INIT_CRYPTO_START, global_log_ctx, 0);
     memset( ctx, 0, sizeof( mbedtls_des3_context ) );
+    log_point(DES3_INIT_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 void mbedtls_des3_free( mbedtls_des3_context *ctx )
 {
+    log_point(DES3_FREE_CRYPTO_START, global_log_ctx, 0);
     if( ctx == NULL )
         return;
 
     mbedtls_zeroize( ctx, sizeof( mbedtls_des3_context ) );
+    log_point(DES3_FREE_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 static const unsigned char odd_parity_table[128] = { 1,  2,  4,  7,  8,
@@ -345,10 +355,12 @@ static const unsigned char odd_parity_table[128] = { 1,  2,  4,  7,  8,
 
 void mbedtls_des_key_set_parity( unsigned char key[MBEDTLS_DES_KEY_SIZE] )
 {
+    log_point(DES_KEY_SET_PARITY_CRYPTO_START, global_log_ctx, 0);
     int i;
 
     for( i = 0; i < MBEDTLS_DES_KEY_SIZE; i++ )
         key[i] = odd_parity_table[key[i] / 2];
+    log_point(DES_KEY_SET_PARITY_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 /*
@@ -356,12 +368,14 @@ void mbedtls_des_key_set_parity( unsigned char key[MBEDTLS_DES_KEY_SIZE] )
  */
 int mbedtls_des_key_check_key_parity( const unsigned char key[MBEDTLS_DES_KEY_SIZE] )
 {
+    log_point(DES_KEY_CHECK_KEY_PARITY_CRYPTO_START, global_log_ctx, 0);
     int i;
 
     for( i = 0; i < MBEDTLS_DES_KEY_SIZE; i++ )
         if( key[i] != odd_parity_table[key[i] / 2] )
             return( 1 );
 
+    log_point(DES_KEY_CHECK_KEY_PARITY_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 
@@ -411,18 +425,21 @@ static const unsigned char weak_key_table[WEAK_KEY_COUNT][MBEDTLS_DES_KEY_SIZE] 
 
 int mbedtls_des_key_check_weak( const unsigned char key[MBEDTLS_DES_KEY_SIZE] )
 {
+    log_point(DES_KEY_CHECK_WEAK_CRYPTO_START, global_log_ctx, 0);
     int i;
 
     for( i = 0; i < WEAK_KEY_COUNT; i++ )
         if( memcmp( weak_key_table[i], key, MBEDTLS_DES_KEY_SIZE) == 0 )
             return( 1 );
 
+    log_point(DES_KEY_CHECK_WEAK_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 
 #if !defined(MBEDTLS_DES_SETKEY_ALT)
 void mbedtls_des_setkey( uint32_t SK[32], const unsigned char key[MBEDTLS_DES_KEY_SIZE] )
 {
+    log_point(DES_SETKEY_CRYPTO_START, global_log_ctx, 0);
     int i;
     uint32_t X, Y, T;
 
@@ -488,6 +505,7 @@ void mbedtls_des_setkey( uint32_t SK[32], const unsigned char key[MBEDTLS_DES_KE
                 | ((Y >>  7) & 0x00000020) | ((Y >>  3) & 0x00000011)
                 | ((Y <<  2) & 0x00000004) | ((Y >> 21) & 0x00000002);
     }
+    log_point(DES_SETKEY_CRYPTO_STOP, global_log_ctx, 0);
 }
 #endif /* !MBEDTLS_DES_SETKEY_ALT */
 
@@ -550,10 +568,12 @@ static void des3_set2key( uint32_t esk[96],
 int mbedtls_des3_set2key_enc( mbedtls_des3_context *ctx,
                       const unsigned char key[MBEDTLS_DES_KEY_SIZE * 2] )
 {
+    log_point(DES3_SET2KEY_ENC_CRYPTO_START, global_log_ctx, 0);
     uint32_t sk[96];
 
     des3_set2key( ctx->sk, sk, key );
     mbedtls_zeroize( sk,  sizeof( sk ) );
+    log_point(DES3_SET2KEY_ENC_CRYPTO_STOP, global_log_ctx, 0);
 
     return( 0 );
 }
@@ -564,11 +584,13 @@ int mbedtls_des3_set2key_enc( mbedtls_des3_context *ctx,
 int mbedtls_des3_set2key_dec( mbedtls_des3_context *ctx,
                       const unsigned char key[MBEDTLS_DES_KEY_SIZE * 2] )
 {
+    log_point(DES3_SET2KEY_DEC_CRYPTO_START, global_log_ctx, 0);
     uint32_t sk[96];
 
     des3_set2key( sk, ctx->sk, key );
     mbedtls_zeroize( sk,  sizeof( sk ) );
 
+    log_point(DES3_SET2KEY_DEC_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 
@@ -601,11 +623,13 @@ static void des3_set3key( uint32_t esk[96],
 int mbedtls_des3_set3key_enc( mbedtls_des3_context *ctx,
                       const unsigned char key[MBEDTLS_DES_KEY_SIZE * 3] )
 {
+    log_point(DES3_SET3KEY_ENC_CRYPTO_START, global_log_ctx, 0);
     uint32_t sk[96];
 
     des3_set3key( ctx->sk, sk, key );
     mbedtls_zeroize( sk,  sizeof( sk ) );
 
+    log_point(DES3_SET3KEY_ENC_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 
@@ -615,11 +639,13 @@ int mbedtls_des3_set3key_enc( mbedtls_des3_context *ctx,
 int mbedtls_des3_set3key_dec( mbedtls_des3_context *ctx,
                       const unsigned char key[MBEDTLS_DES_KEY_SIZE * 3] )
 {
+    log_point(DES3_SET3KEY_DEC_CRYPTO_START, global_log_ctx, 0);
     uint32_t sk[96];
 
     des3_set3key( sk, ctx->sk, key );
     mbedtls_zeroize( sk,  sizeof( sk ) );
 
+    log_point(DES3_SET3KEY_DEC_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 
@@ -631,6 +657,7 @@ int mbedtls_des_crypt_ecb( mbedtls_des_context *ctx,
                     const unsigned char input[8],
                     unsigned char output[8] )
 {
+    log_point(DES_CRYPT_ECB_CRYPTO_START, global_log_ctx, 0);
     int i;
     uint32_t X, Y, T, *SK;
 
@@ -652,6 +679,7 @@ int mbedtls_des_crypt_ecb( mbedtls_des_context *ctx,
     PUT_UINT32_BE( Y, output, 0 );
     PUT_UINT32_BE( X, output, 4 );
 
+    log_point(DES_CRYPT_ECB_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 #endif /* !MBEDTLS_DES_CRYPT_ECB_ALT */
@@ -667,6 +695,7 @@ int mbedtls_des_crypt_cbc( mbedtls_des_context *ctx,
                     const unsigned char *input,
                     unsigned char *output )
 {
+    log_point(DES_CRYPT_CBC_CRYPTO_START, global_log_ctx, 0);
     int i;
     unsigned char temp[8];
 
@@ -706,6 +735,7 @@ int mbedtls_des_crypt_cbc( mbedtls_des_context *ctx,
         }
     }
 
+    log_point(DES_CRYPT_CBC_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 #endif /* MBEDTLS_CIPHER_MODE_CBC */
@@ -718,6 +748,7 @@ int mbedtls_des3_crypt_ecb( mbedtls_des3_context *ctx,
                      const unsigned char input[8],
                      unsigned char output[8] )
 {
+    log_point(DES3_CRYPT_ECB_CRYPTO_START, global_log_ctx, 0);
     int i;
     uint32_t X, Y, T, *SK;
 
@@ -751,6 +782,7 @@ int mbedtls_des3_crypt_ecb( mbedtls_des3_context *ctx,
     PUT_UINT32_BE( Y, output, 0 );
     PUT_UINT32_BE( X, output, 4 );
 
+    log_point(DES3_CRYPT_ECB_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 #endif /* !MBEDTLS_DES3_CRYPT_ECB_ALT */
@@ -766,6 +798,7 @@ int mbedtls_des3_crypt_cbc( mbedtls_des3_context *ctx,
                      const unsigned char *input,
                      unsigned char *output )
 {
+    log_point(DES3_CRYPT_CBC_CRYPTO_START, global_log_ctx, 0);
     int i;
     unsigned char temp[8];
 
@@ -805,6 +838,7 @@ int mbedtls_des3_crypt_cbc( mbedtls_des3_context *ctx,
         }
     }
 
+    log_point(DES3_CRYPT_CBC_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 #endif /* MBEDTLS_CIPHER_MODE_CBC */

@@ -45,6 +45,8 @@
 #endif /* MBEDTLS_PLATFORM_C */
 #endif /* MBEDTLS_SELF_TEST */
 
+#include "logging.h"
+
 #if !defined(MBEDTLS_ARC4_ALT)
 
 /* Implementation that should never be optimized out by the compiler */
@@ -54,15 +56,19 @@ static void mbedtls_zeroize( void *v, size_t n ) {
 
 void mbedtls_arc4_init( mbedtls_arc4_context *ctx )
 {
+    log_point(ARC4_INIT_CRYPTO_START, global_log_ctx, 0);
     memset( ctx, 0, sizeof( mbedtls_arc4_context ) );
+    log_point(ARC4_INIT_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 void mbedtls_arc4_free( mbedtls_arc4_context *ctx )
 {
+    log_point(ARC4_FREE_CRYPTO_START, global_log_ctx, 0);
     if( ctx == NULL )
         return;
 
     mbedtls_zeroize( ctx, sizeof( mbedtls_arc4_context ) );
+    log_point(ARC4_FREE_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 /*
@@ -71,6 +77,7 @@ void mbedtls_arc4_free( mbedtls_arc4_context *ctx )
 void mbedtls_arc4_setup( mbedtls_arc4_context *ctx, const unsigned char *key,
                  unsigned int keylen )
 {
+    log_point(ARC4_SETUP_CRYPTO_START, global_log_ctx, 0);
     int i, j, a;
     unsigned int k;
     unsigned char *m;
@@ -93,6 +100,7 @@ void mbedtls_arc4_setup( mbedtls_arc4_context *ctx, const unsigned char *key,
         m[i] = m[j];
         m[j] = (unsigned char) a;
     }
+    log_point(ARC4_SETUP_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 /*
@@ -101,6 +109,7 @@ void mbedtls_arc4_setup( mbedtls_arc4_context *ctx, const unsigned char *key,
 int mbedtls_arc4_crypt( mbedtls_arc4_context *ctx, size_t length, const unsigned char *input,
                 unsigned char *output )
 {
+    log_point(ARC4_CRYPT_CRYPTO_START, global_log_ctx, 0);
     int x, y, a, b;
     size_t i;
     unsigned char *m;
@@ -124,6 +133,7 @@ int mbedtls_arc4_crypt( mbedtls_arc4_context *ctx, size_t length, const unsigned
     ctx->x = x;
     ctx->y = y;
 
+    log_point(ARC4_CRYPT_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 

@@ -52,6 +52,8 @@
 #endif /* MBEDTLS_PLATFORM_C */
 #endif /* MBEDTLS_SELF_TEST */
 
+#include "logging.h"
+
 #if !defined(MBEDTLS_AES_ALT)
 
 /* Implementation that should never be optimized out by the compiler */
@@ -466,15 +468,19 @@ static void aes_gen_tables( void )
 
 void mbedtls_aes_init( mbedtls_aes_context *ctx )
 {
+    log_point(AES_INIT_CRYPTO_START, global_log_ctx, 0);
     memset( ctx, 0, sizeof( mbedtls_aes_context ) );
+    log_point(AES_INIT_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 void mbedtls_aes_free( mbedtls_aes_context *ctx )
 {
+    log_point(AES_FREE_CRYPTO_START, global_log_ctx,0);
     if( ctx == NULL )
         return;
 
     mbedtls_zeroize( ctx, sizeof( mbedtls_aes_context ) );
+    log_point(AES_FREE_CRYPTO_STOP, global_log_ctx,0);
 }
 
 /*
@@ -484,6 +490,7 @@ void mbedtls_aes_free( mbedtls_aes_context *ctx )
 int mbedtls_aes_setkey_enc( mbedtls_aes_context *ctx, const unsigned char *key,
                     unsigned int keybits )
 {
+    log_point(AES_SETKEY_ENC_CRYPTO_START, global_log_ctx, 0);
     unsigned int i;
     uint32_t *RK;
 
@@ -515,8 +522,10 @@ int mbedtls_aes_setkey_enc( mbedtls_aes_context *ctx, const unsigned char *key,
     ctx->rk = RK = ctx->buf;
 
 #if defined(MBEDTLS_AESNI_C) && defined(MBEDTLS_HAVE_X86_64)
-    if( mbedtls_aesni_has_support( MBEDTLS_AESNI_AES ) )
+    if( mbedtls_aesni_has_support( MBEDTLS_AESNI_AES ) ) {
+        log_point(AES_SETKEY_ENC_CRYPTO_STOP, global_log_ctx, 0);
         return( mbedtls_aesni_setkey_enc( (unsigned char *) ctx->rk, key, keybits ) );
+    }
 #endif
 
     for( i = 0; i < ( keybits >> 5 ); i++ )
@@ -587,6 +596,7 @@ int mbedtls_aes_setkey_enc( mbedtls_aes_context *ctx, const unsigned char *key,
             break;
     }
 
+    log_point(AES_SETKEY_ENC_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 #endif /* !MBEDTLS_AES_SETKEY_ENC_ALT */
@@ -598,6 +608,7 @@ int mbedtls_aes_setkey_enc( mbedtls_aes_context *ctx, const unsigned char *key,
 int mbedtls_aes_setkey_dec( mbedtls_aes_context *ctx, const unsigned char *key,
                     unsigned int keybits )
 {
+    log_point(AES_SETKEY_DEC_CRYPTO_START, global_log_ctx, 0);
     int i, j, ret;
     mbedtls_aes_context cty;
     uint32_t *RK;
@@ -656,6 +667,7 @@ int mbedtls_aes_setkey_dec( mbedtls_aes_context *ctx, const unsigned char *key,
 exit:
     mbedtls_aes_free( &cty );
 
+    log_point(AES_SETKEY_DEC_CRYPTO_STOP, global_log_ctx, 0);
     return( ret );
 }
 #endif /* !MBEDTLS_AES_SETKEY_DEC_ALT */
@@ -828,9 +840,12 @@ int mbedtls_aes_crypt_ecb( mbedtls_aes_context *ctx,
                     const unsigned char input[16],
                     unsigned char output[16] )
 {
+    log_point(AES_CRYPT_ECB_CRYPTO_START, global_log_ctx, 0);
 #if defined(MBEDTLS_AESNI_C) && defined(MBEDTLS_HAVE_X86_64)
-    if( mbedtls_aesni_has_support( MBEDTLS_AESNI_AES ) )
+    if( mbedtls_aesni_has_support( MBEDTLS_AESNI_AES ) ) {
+        log_point(AES_CRYPT_ECB_CRYPTO_STOP, global_log_ctx, 0);
         return( mbedtls_aesni_crypt_ecb( ctx, mode, input, output ) );
+    }
 #endif
 
 #if defined(MBEDTLS_PADLOCK_C) && defined(MBEDTLS_HAVE_X86)
@@ -850,6 +865,7 @@ int mbedtls_aes_crypt_ecb( mbedtls_aes_context *ctx,
     else
         mbedtls_aes_decrypt( ctx, input, output );
 
+    log_point(AES_CRYPT_ECB_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 
@@ -864,6 +880,7 @@ int mbedtls_aes_crypt_cbc( mbedtls_aes_context *ctx,
                     const unsigned char *input,
                     unsigned char *output )
 {
+    log_point(AES_CRYPT_CBC_CRYPTO_START, global_log_ctx, 0);
     int i;
     unsigned char temp[16];
 
@@ -915,6 +932,7 @@ int mbedtls_aes_crypt_cbc( mbedtls_aes_context *ctx,
         }
     }
 
+    log_point(AES_CRYPT_CBC_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 #endif /* MBEDTLS_CIPHER_MODE_CBC */
@@ -931,6 +949,7 @@ int mbedtls_aes_crypt_cfb128( mbedtls_aes_context *ctx,
                        const unsigned char *input,
                        unsigned char *output )
 {
+    log_point(AES_CRYPT_CFB128_CRYPTO_START, global_log_ctx, 0);
     int c;
     size_t n = *iv_off;
 
@@ -963,6 +982,7 @@ int mbedtls_aes_crypt_cfb128( mbedtls_aes_context *ctx,
 
     *iv_off = n;
 
+    log_point(AES_CRYPT_CFB128_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 
@@ -976,6 +996,7 @@ int mbedtls_aes_crypt_cfb8( mbedtls_aes_context *ctx,
                        const unsigned char *input,
                        unsigned char *output )
 {
+    log_point(AES_CRYPT_CFB8_CRYPTO_START, global_log_ctx, 0);
     unsigned char c;
     unsigned char ov[17];
 
@@ -994,7 +1015,7 @@ int mbedtls_aes_crypt_cfb8( mbedtls_aes_context *ctx,
 
         memcpy( iv, ov + 1, 16 );
     }
-
+    log_point(AES_CRYPT_CFB8_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 #endif /*MBEDTLS_CIPHER_MODE_CFB */
@@ -1011,6 +1032,7 @@ int mbedtls_aes_crypt_ctr( mbedtls_aes_context *ctx,
                        const unsigned char *input,
                        unsigned char *output )
 {
+    log_point(AES_CRYPT_CTR_CRYPTO_START, global_log_ctx, 0);
     int c, i;
     size_t n = *nc_off;
 
@@ -1031,6 +1053,7 @@ int mbedtls_aes_crypt_ctr( mbedtls_aes_context *ctx,
 
     *nc_off = n;
 
+    log_point(AES_CRYPT_CTR_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 #endif /* MBEDTLS_CIPHER_MODE_CTR */

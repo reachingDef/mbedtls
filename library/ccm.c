@@ -49,6 +49,8 @@
 #endif /* MBEDTLS_PLATFORM_C */
 #endif /* MBEDTLS_SELF_TEST && MBEDTLS_AES_C */
 
+#include "logging.h"
+
 /* Implementation that should never be optimized out by the compiler */
 static void mbedtls_zeroize( void *v, size_t n ) {
     volatile unsigned char *p = (unsigned char*)v; while( n-- ) *p++ = 0;
@@ -62,7 +64,9 @@ static void mbedtls_zeroize( void *v, size_t n ) {
  */
 void mbedtls_ccm_init( mbedtls_ccm_context *ctx )
 {
+    log_point(CCM_INIT_CRYPTO_START, global_log_ctx, 0);
     memset( ctx, 0, sizeof( mbedtls_ccm_context ) );
+    log_point(CCM_INIT_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 int mbedtls_ccm_setkey( mbedtls_ccm_context *ctx,
@@ -70,6 +74,7 @@ int mbedtls_ccm_setkey( mbedtls_ccm_context *ctx,
                         const unsigned char *key,
                         unsigned int keybits )
 {
+    log_point(CCM_SETKEY_CRYPTO_START, global_log_ctx, 0);
     int ret;
     const mbedtls_cipher_info_t *cipher_info;
 
@@ -91,6 +96,7 @@ int mbedtls_ccm_setkey( mbedtls_ccm_context *ctx,
         return( ret );
     }
 
+    log_point(CCM_SETKEY_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 
@@ -99,8 +105,10 @@ int mbedtls_ccm_setkey( mbedtls_ccm_context *ctx,
  */
 void mbedtls_ccm_free( mbedtls_ccm_context *ctx )
 {
+    log_point(CCM_FREE_CRYPTO_START, global_log_ctx, 0);
     mbedtls_cipher_free( &ctx->cipher_ctx );
     mbedtls_zeroize( ctx, sizeof( mbedtls_ccm_context ) );
+    log_point(CCM_FREE_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 /*
@@ -310,8 +318,11 @@ int mbedtls_ccm_encrypt_and_tag( mbedtls_ccm_context *ctx, size_t length,
                          const unsigned char *input, unsigned char *output,
                          unsigned char *tag, size_t tag_len )
 {
-    return( ccm_auth_crypt( ctx, CCM_ENCRYPT, length, iv, iv_len,
-                            add, add_len, input, output, tag, tag_len ) );
+    log_point(CCM_ENCRYPT_AND_TAG_CRYPTO_START, global_log_ctx, 0);
+    int ret = ccm_auth_crypt( ctx, CCM_ENCRYPT, length, iv, iv_len,
+                            add, add_len, input, output, tag, tag_len ) ;
+    log_point(CCM_ENCRYPT_AND_TAG_CRYPTO_STOP, global_log_ctx, 0);
+    return ret;
 }
 
 /*
@@ -323,6 +334,7 @@ int mbedtls_ccm_auth_decrypt( mbedtls_ccm_context *ctx, size_t length,
                       const unsigned char *input, unsigned char *output,
                       const unsigned char *tag, size_t tag_len )
 {
+    log_point(CCM_AUTH_DECRYPT_CRYPTO_START, global_log_ctx, 0);
     int ret;
     unsigned char check_tag[16];
     unsigned char i;
@@ -345,6 +357,7 @@ int mbedtls_ccm_auth_decrypt( mbedtls_ccm_context *ctx, size_t length,
         return( MBEDTLS_ERR_CCM_AUTH_FAILED );
     }
 
+    log_point(CCM_AUTH_DECRYPT_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 

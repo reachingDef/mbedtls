@@ -61,6 +61,8 @@
 #define mbedtls_free   free
 #endif
 
+#include "logging.h"
+
 /*
  * Initialize an RSA context
  */
@@ -68,6 +70,7 @@ void mbedtls_rsa_init( mbedtls_rsa_context *ctx,
                int padding,
                int hash_id )
 {
+    log_point(RSA_INIT_CRYPTO_START, global_log_ctx, 0);
     memset( ctx, 0, sizeof( mbedtls_rsa_context ) );
 
     mbedtls_rsa_set_padding( ctx, padding, hash_id );
@@ -75,6 +78,7 @@ void mbedtls_rsa_init( mbedtls_rsa_context *ctx,
 #if defined(MBEDTLS_THREADING_C)
     mbedtls_mutex_init( &ctx->mutex );
 #endif
+    log_point(RSA_INIT_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 /*
@@ -96,6 +100,7 @@ int mbedtls_rsa_gen_key( mbedtls_rsa_context *ctx,
                  void *p_rng,
                  unsigned int nbits, int exponent )
 {
+    log_point(RSA_GEN_KEY_CRYPTO_START, global_log_ctx, 0);
     int ret;
     mbedtls_mpi P1, Q1, H, G;
 
@@ -162,6 +167,7 @@ cleanup:
         return( MBEDTLS_ERR_RSA_KEY_GEN_FAILED + ret );
     }
 
+    log_point(RSA_GEN_KEY_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 
@@ -172,6 +178,7 @@ cleanup:
  */
 int mbedtls_rsa_check_pubkey( const mbedtls_rsa_context *ctx )
 {
+    log_point(RSA_CHECK_PUBKEY_CRYPTO_START, global_log_ctx, 0);
     if( !ctx->N.p || !ctx->E.p )
         return( MBEDTLS_ERR_RSA_KEY_CHECK_FAILED );
 
@@ -187,6 +194,7 @@ int mbedtls_rsa_check_pubkey( const mbedtls_rsa_context *ctx )
         mbedtls_mpi_cmp_mpi( &ctx->E, &ctx->N ) >= 0 )
         return( MBEDTLS_ERR_RSA_KEY_CHECK_FAILED );
 
+    log_point(RSA_CHECK_PUBKEY_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 
@@ -195,6 +203,7 @@ int mbedtls_rsa_check_pubkey( const mbedtls_rsa_context *ctx )
  */
 int mbedtls_rsa_check_privkey( const mbedtls_rsa_context *ctx )
 {
+    log_point(RSA_CHECK_PRIVKEY_CRYPTO_START, global_log_ctx, 0);
     int ret;
     mbedtls_mpi PQ, DE, P1, Q1, H, I, G, G2, L1, L2, DP, DQ, QP;
 
@@ -249,6 +258,7 @@ cleanup:
     if( ret != 0 )
         return( MBEDTLS_ERR_RSA_KEY_CHECK_FAILED + ret );
 
+    log_point(RSA_CHECK_PRIVKEY_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 
@@ -257,6 +267,7 @@ cleanup:
  */
 int mbedtls_rsa_check_pub_priv( const mbedtls_rsa_context *pub, const mbedtls_rsa_context *prv )
 {
+    log_point(RSA_CHECK_PUB_PRIV_CRYPTO_START, global_log_ctx, 0);
     if( mbedtls_rsa_check_pubkey( pub ) != 0 ||
         mbedtls_rsa_check_privkey( prv ) != 0 )
     {
@@ -269,6 +280,7 @@ int mbedtls_rsa_check_pub_priv( const mbedtls_rsa_context *pub, const mbedtls_rs
         return( MBEDTLS_ERR_RSA_KEY_CHECK_FAILED );
     }
 
+    log_point(RSA_CHECK_PUB_PRIV_CRYPTO_START, global_log_ctx, 0);
     return( 0 );
 }
 
@@ -279,6 +291,7 @@ int mbedtls_rsa_public( mbedtls_rsa_context *ctx,
                 const unsigned char *input,
                 unsigned char *output )
 {
+    log_point(RSA_PUBLIC_CRYPTO_START, global_log_ctx, 0);
     int ret;
     size_t olen;
     mbedtls_mpi T;
@@ -313,6 +326,7 @@ cleanup:
     if( ret != 0 )
         return( MBEDTLS_ERR_RSA_PUBLIC_FAILED + ret );
 
+    log_point(RSA_PUBLIC_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 
@@ -365,6 +379,7 @@ int mbedtls_rsa_private( mbedtls_rsa_context *ctx,
                  const unsigned char *input,
                  unsigned char *output )
 {
+    log_point(RSA_PRIVATE_CRYPTO_START, global_log_ctx, 0);
     int ret;
     size_t olen;
     mbedtls_mpi T, T1, T2;
@@ -448,6 +463,7 @@ cleanup:
     if( ret != 0 )
         return( MBEDTLS_ERR_RSA_PRIVATE_FAILED + ret );
 
+    log_point(RSA_PRIVATE_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 
@@ -512,6 +528,7 @@ int mbedtls_rsa_rsaes_oaep_encrypt( mbedtls_rsa_context *ctx,
                             const unsigned char *input,
                             unsigned char *output )
 {
+    log_point(RSA_RSAES_OAEP_ENCRYPT_CRYPTO_START, global_log_ctx, 0);
     size_t olen;
     int ret;
     unsigned char *p = output;
@@ -570,6 +587,7 @@ int mbedtls_rsa_rsaes_oaep_encrypt( mbedtls_rsa_context *ctx,
 
     mbedtls_md_free( &md_ctx );
 
+    log_point(RSA_RSAES_OAEP_ENCRYPT_CRYPTO_STOP, global_log_ctx, 0);
     return( ( mode == MBEDTLS_RSA_PUBLIC )
             ? mbedtls_rsa_public(  ctx, output, output )
             : mbedtls_rsa_private( ctx, f_rng, p_rng, output, output ) );
@@ -686,6 +704,7 @@ int mbedtls_rsa_rsaes_oaep_decrypt( mbedtls_rsa_context *ctx,
                             unsigned char *output,
                             size_t output_max_len )
 {
+    log_point(RSA_RSAES_OAEP_DECRYPT_CRYPTO_START, global_log_ctx, 0);
     int ret;
     size_t ilen, i, pad_len;
     unsigned char *p, bad, pad_done;
@@ -792,6 +811,7 @@ int mbedtls_rsa_rsaes_oaep_decrypt( mbedtls_rsa_context *ctx,
     *olen = ilen - (p - buf);
     memcpy( output, p, *olen );
 
+    log_point(RSA_RSAES_OAEP_DECRYPT_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 #endif /* MBEDTLS_PKCS1_V21 */
@@ -808,6 +828,7 @@ int mbedtls_rsa_rsaes_pkcs1_v15_decrypt( mbedtls_rsa_context *ctx,
                                  unsigned char *output,
                                  size_t output_max_len)
 {
+    log_point(RSA_RSAES_PKCS1_V15_DECRYPT_CRYPTO_START, global_log_ctx, 0);
     int ret;
     size_t ilen, pad_count = 0, i;
     unsigned char *p, bad, pad_done = 0;
@@ -879,6 +900,7 @@ int mbedtls_rsa_rsaes_pkcs1_v15_decrypt( mbedtls_rsa_context *ctx,
     *olen = ilen - (p - buf);
     memcpy( output, p, *olen );
 
+    log_point(RSA_RSAES_PKCS1_V15_DECRYPT_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 #endif /* MBEDTLS_PKCS1_V15 */
@@ -927,6 +949,7 @@ int mbedtls_rsa_rsassa_pss_sign( mbedtls_rsa_context *ctx,
                          const unsigned char *hash,
                          unsigned char *sig )
 {
+    log_point(RSA_RSASSA_PSS_SIGN_CRYPTO_START, global_log_ctx, 0);
     size_t olen;
     unsigned char *p = sig;
     unsigned char salt[MBEDTLS_MD_MAX_SIZE];
@@ -1006,6 +1029,7 @@ int mbedtls_rsa_rsassa_pss_sign( mbedtls_rsa_context *ctx,
     p += hlen;
     *p++ = 0xBC;
 
+    log_point(RSA_RSASSA_PSS_SIGN_CRYPTO_STOP, global_log_ctx, 0);
     return( ( mode == MBEDTLS_RSA_PUBLIC )
             ? mbedtls_rsa_public(  ctx, sig, sig )
             : mbedtls_rsa_private( ctx, f_rng, p_rng, sig, sig ) );
@@ -1028,6 +1052,7 @@ int mbedtls_rsa_rsassa_pkcs1_v15_sign( mbedtls_rsa_context *ctx,
                                const unsigned char *hash,
                                unsigned char *sig )
 {
+    log_point(RSA_RSASSA_PKCS1_V15_SIGN_CRYPTO_START, global_log_ctx, 0);
     size_t nb_pad, olen, oid_size = 0;
     unsigned char *p = sig;
     const char *oid = NULL;
@@ -1136,6 +1161,7 @@ cleanup:
     mbedtls_free( sig_try );
     mbedtls_free( verif );
 
+    log_point(RSA_RSASSA_PKCS1_V15_SIGN_CRYPTO_STOP, global_log_ctx, 0);
     return( ret );
 }
 #endif /* MBEDTLS_PKCS1_V15 */
@@ -1186,6 +1212,7 @@ int mbedtls_rsa_rsassa_pss_verify_ext( mbedtls_rsa_context *ctx,
                                int expected_salt_len,
                                const unsigned char *sig )
 {
+    log_point(RSA_RSASSA_PSS_VERIFY_EXT_CRYPTO_START, global_log_ctx, 0);
     int ret;
     size_t siglen;
     unsigned char *p;
@@ -1292,10 +1319,12 @@ int mbedtls_rsa_rsassa_pss_verify_ext( mbedtls_rsa_context *ctx,
 
     mbedtls_md_free( &md_ctx );
 
-    if( memcmp( p + slen, result, hlen ) == 0 )
+    if( memcmp( p + slen, result, hlen ) == 0 ) {
+        log_point(RSA_RSASSA_PSS_VERIFY_EXT_CRYPTO_STOP, global_log_ctx, 0);
         return( 0 );
-    else
+    } else {
         return( MBEDTLS_ERR_RSA_VERIFY_FAILED );
+    }
 }
 
 /*
@@ -1335,6 +1364,7 @@ int mbedtls_rsa_rsassa_pkcs1_v15_verify( mbedtls_rsa_context *ctx,
                                  const unsigned char *hash,
                                  const unsigned char *sig )
 {
+    log_point(RSA_RSASSA_PKCS1_V15_VERIFY_CRYPTO_START, global_log_ctx, 0);
     int ret;
     size_t len, siglen, asn1_len;
     unsigned char *p, *end;
@@ -1437,6 +1467,7 @@ int mbedtls_rsa_rsassa_pkcs1_v15_verify( mbedtls_rsa_context *ctx,
     if( p != end )
         return( MBEDTLS_ERR_RSA_VERIFY_FAILED );
 
+    log_point(RSA_RSASSA_PKCS1_V15_VERIFY_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 #endif /* MBEDTLS_PKCS1_V15 */
@@ -1477,6 +1508,7 @@ int mbedtls_rsa_pkcs1_verify( mbedtls_rsa_context *ctx,
  */
 int mbedtls_rsa_copy( mbedtls_rsa_context *dst, const mbedtls_rsa_context *src )
 {
+    log_point(RSA_COPY_CRYPTO_START, global_log_ctx, 0);
     int ret;
 
     dst->ver = src->ver;
@@ -1506,6 +1538,7 @@ cleanup:
     if( ret != 0 )
         mbedtls_rsa_free( dst );
 
+    log_point(RSA_COPY_CRYPTO_STOP, global_log_ctx, 0);
     return( ret );
 }
 
@@ -1514,6 +1547,7 @@ cleanup:
  */
 void mbedtls_rsa_free( mbedtls_rsa_context *ctx )
 {
+    log_point(RSA_FREE_CRYPTO_START, global_log_ctx, 0);
     mbedtls_mpi_free( &ctx->Vi ); mbedtls_mpi_free( &ctx->Vf );
     mbedtls_mpi_free( &ctx->RQ ); mbedtls_mpi_free( &ctx->RP ); mbedtls_mpi_free( &ctx->RN );
     mbedtls_mpi_free( &ctx->QP ); mbedtls_mpi_free( &ctx->DQ ); mbedtls_mpi_free( &ctx->DP );
@@ -1523,6 +1557,7 @@ void mbedtls_rsa_free( mbedtls_rsa_context *ctx )
 #if defined(MBEDTLS_THREADING_C)
     mbedtls_mutex_free( &ctx->mutex );
 #endif
+    log_point(RSA_FREE_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 #if defined(MBEDTLS_SELF_TEST)

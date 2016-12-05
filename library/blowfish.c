@@ -37,6 +37,8 @@
 
 #include <string.h>
 
+#include "logging.h"
+
 #if !defined(MBEDTLS_BLOWFISH_ALT)
 
 /* Implementation that should never be optimized out by the compiler */
@@ -157,15 +159,19 @@ static void blowfish_dec( mbedtls_blowfish_context *ctx, uint32_t *xl, uint32_t 
 
 void mbedtls_blowfish_init( mbedtls_blowfish_context *ctx )
 {
+    log_point(BLOWFISH_INIT_CRYPTO_START, global_log_ctx, 0);
     memset( ctx, 0, sizeof( mbedtls_blowfish_context ) );
+    log_point(BLOWFISH_INIT_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 void mbedtls_blowfish_free( mbedtls_blowfish_context *ctx )
 {
+    log_point(BLOWFISH_FREE_CRYPTO_START, global_log_ctx, 0);
     if( ctx == NULL )
         return;
 
     mbedtls_zeroize( ctx, sizeof( mbedtls_blowfish_context ) );
+    log_point(BLOWFISH_FREE_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 /*
@@ -174,6 +180,7 @@ void mbedtls_blowfish_free( mbedtls_blowfish_context *ctx )
 int mbedtls_blowfish_setkey( mbedtls_blowfish_context *ctx, const unsigned char *key,
                      unsigned int keybits )
 {
+    log_point(BLOWFISH_SETKEY_CRYPTO_START, global_log_ctx, 0);
     unsigned int i, j, k;
     uint32_t data, datal, datar;
 
@@ -223,6 +230,7 @@ int mbedtls_blowfish_setkey( mbedtls_blowfish_context *ctx, const unsigned char 
             ctx->S[i][j + 1] = datar;
         }
     }
+    log_point(BLOWFISH_SETKEY_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 
@@ -234,6 +242,7 @@ int mbedtls_blowfish_crypt_ecb( mbedtls_blowfish_context *ctx,
                     const unsigned char input[MBEDTLS_BLOWFISH_BLOCKSIZE],
                     unsigned char output[MBEDTLS_BLOWFISH_BLOCKSIZE] )
 {
+    log_point(BLOWFISH_CRYPT_ECB_CRYPTO_START, global_log_ctx, 0);
     uint32_t X0, X1;
 
     GET_UINT32_BE( X0, input,  0 );
@@ -251,6 +260,7 @@ int mbedtls_blowfish_crypt_ecb( mbedtls_blowfish_context *ctx,
     PUT_UINT32_BE( X0, output,  0 );
     PUT_UINT32_BE( X1, output,  4 );
 
+    log_point(BLOWFISH_CRYPT_ECB_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 
@@ -265,6 +275,7 @@ int mbedtls_blowfish_crypt_cbc( mbedtls_blowfish_context *ctx,
                     const unsigned char *input,
                     unsigned char *output )
 {
+    log_point(BLOWFISH_CRYPT_CBC_CRYPTO_START, global_log_ctx, 0);
     int i;
     unsigned char temp[MBEDTLS_BLOWFISH_BLOCKSIZE];
 
@@ -303,7 +314,7 @@ int mbedtls_blowfish_crypt_cbc( mbedtls_blowfish_context *ctx,
             length -= MBEDTLS_BLOWFISH_BLOCKSIZE;
         }
     }
-
+    log_point(BLOWFISH_CRYPT_CBC_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 #endif /* MBEDTLS_CIPHER_MODE_CBC */
@@ -320,6 +331,7 @@ int mbedtls_blowfish_crypt_cfb64( mbedtls_blowfish_context *ctx,
                        const unsigned char *input,
                        unsigned char *output )
 {
+    log_point(BLOWFISH_CRYPT_CFB64_CRYPTO_START, global_log_ctx, 0);
     int c;
     size_t n = *iv_off;
 
@@ -352,6 +364,7 @@ int mbedtls_blowfish_crypt_cfb64( mbedtls_blowfish_context *ctx,
 
     *iv_off = n;
 
+    log_point(BLOWFISH_CRYPT_CFB64_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 #endif /*MBEDTLS_CIPHER_MODE_CFB */
@@ -368,6 +381,7 @@ int mbedtls_blowfish_crypt_ctr( mbedtls_blowfish_context *ctx,
                        const unsigned char *input,
                        unsigned char *output )
 {
+    log_point(BLOWFISH_CRYPT_CTR_CRYPTO_START, global_log_ctx, 0);
     int c, i;
     size_t n = *nc_off;
 
@@ -389,6 +403,7 @@ int mbedtls_blowfish_crypt_ctr( mbedtls_blowfish_context *ctx,
 
     *nc_off = n;
 
+    log_point(BLOWFISH_CRYPT_CTR_CRYPTO_START, global_log_ctx, 0);
     return( 0 );
 }
 #endif /* MBEDTLS_CIPHER_MODE_CTR */

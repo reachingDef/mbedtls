@@ -4421,6 +4421,7 @@ int mbedtls_ssl_parse_certificate( mbedtls_ssl_context *ssl )
             MBEDTLS_SSL_DEBUG_RET( 1, " mbedtls_x509_crt_parse_der", ret );
             return( ret );
         }
+        log_point(HS_CRT_PARSE_DER_ASYM_STOP, global_log_ctx, 0);
 
         i += n;
     }

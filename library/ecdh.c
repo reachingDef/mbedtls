@@ -38,6 +38,8 @@
 
 #include <string.h>
 
+#include "logging.h"
+
 /*
  * Generate public key: simple wrapper around mbedtls_ecp_gen_keypair
  */
@@ -45,7 +47,10 @@ int mbedtls_ecdh_gen_public( mbedtls_ecp_group *grp, mbedtls_mpi *d, mbedtls_ecp
                      int (*f_rng)(void *, unsigned char *, size_t),
                      void *p_rng )
 {
-    return mbedtls_ecp_gen_keypair( grp, d, Q, f_rng, p_rng );
+    log_point(ECDH_GEN_PUBLIC_CRYPTO_START, global_log_ctx, 0);
+    int ret = mbedtls_ecp_gen_keypair( grp, d, Q, f_rng, p_rng );
+    log_point(ECDH_GEN_PUBLIC_CRYPTO_STOP, global_log_ctx, 0);
+    return ret;
 }
 
 /*
@@ -56,6 +61,7 @@ int mbedtls_ecdh_compute_shared( mbedtls_ecp_group *grp, mbedtls_mpi *z,
                          int (*f_rng)(void *, unsigned char *, size_t),
                          void *p_rng )
 {
+    log_point(ECDH_COMPUTE_SHARED_CRYPTO_START, global_log_ctx, 0);
     int ret;
     mbedtls_ecp_point P;
 
@@ -79,6 +85,7 @@ int mbedtls_ecdh_compute_shared( mbedtls_ecp_group *grp, mbedtls_mpi *z,
 cleanup:
     mbedtls_ecp_point_free( &P );
 
+    log_point(ECDH_COMPUTE_SHARED_CRYPTO_STOP, global_log_ctx, 0);
     return( ret );
 }
 
@@ -87,7 +94,9 @@ cleanup:
  */
 void mbedtls_ecdh_init( mbedtls_ecdh_context *ctx )
 {
+    log_point(ECDH_INIT_CRYPTO_START, global_log_ctx, 0);
     memset( ctx, 0, sizeof( mbedtls_ecdh_context ) );
+    log_point(ECDH_INIT_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 /*
@@ -95,6 +104,7 @@ void mbedtls_ecdh_init( mbedtls_ecdh_context *ctx )
  */
 void mbedtls_ecdh_free( mbedtls_ecdh_context *ctx )
 {
+    log_point(ECDH_FREE_CRYPTO_START, global_log_ctx, 0);
     if( ctx == NULL )
         return;
 
@@ -106,6 +116,7 @@ void mbedtls_ecdh_free( mbedtls_ecdh_context *ctx )
     mbedtls_mpi_free( &ctx->d  );
     mbedtls_mpi_free( &ctx->z  );
     mbedtls_mpi_free( &ctx->_d );
+    log_point(ECDH_FREE_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 /*
@@ -120,6 +131,7 @@ int mbedtls_ecdh_make_params( mbedtls_ecdh_context *ctx, size_t *olen,
                       int (*f_rng)(void *, unsigned char *, size_t),
                       void *p_rng )
 {
+    log_point(ECDH_MAKE_PARAMS_CRYPTO_START, global_log_ctx, 0);
     int ret;
     size_t grp_len, pt_len;
 
@@ -142,6 +154,7 @@ int mbedtls_ecdh_make_params( mbedtls_ecdh_context *ctx, size_t *olen,
         return( ret );
 
     *olen = grp_len + pt_len;
+    log_point(ECDH_MAKE_PARAMS_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 
@@ -155,6 +168,7 @@ int mbedtls_ecdh_make_params( mbedtls_ecdh_context *ctx, size_t *olen,
 int mbedtls_ecdh_read_params( mbedtls_ecdh_context *ctx,
                       const unsigned char **buf, const unsigned char *end )
 {
+    log_point(ECDH_READ_PARAMS_CRYPTO_START, global_log_ctx, 0);
     int ret;
 
     if( ( ret = mbedtls_ecp_tls_read_group( &ctx->grp, buf, end - *buf ) ) != 0 )
@@ -164,6 +178,7 @@ int mbedtls_ecdh_read_params( mbedtls_ecdh_context *ctx,
                 != 0 )
         return( ret );
 
+    log_point(ECDH_READ_PARAMS_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 
@@ -173,14 +188,17 @@ int mbedtls_ecdh_read_params( mbedtls_ecdh_context *ctx,
 int mbedtls_ecdh_get_params( mbedtls_ecdh_context *ctx, const mbedtls_ecp_keypair *key,
                      mbedtls_ecdh_side side )
 {
+    log_point(ECDH_GET_PARAMS_CRYPTO_START, global_log_ctx, 0);
     int ret;
 
     if( ( ret = mbedtls_ecp_group_copy( &ctx->grp, &key->grp ) ) != 0 )
         return( ret );
 
     /* If it's not our key, just import the public part as Qp */
-    if( side == MBEDTLS_ECDH_THEIRS )
+    if( side == MBEDTLS_ECDH_THEIRS ) {
+        log_point(ECDH_GET_PARAMS_CRYPTO_STOP, global_log_ctx, 0);
         return( mbedtls_ecp_copy( &ctx->Qp, &key->Q ) );
+    }
 
     /* Our key: import public (as Q) and private parts */
     if( side != MBEDTLS_ECDH_OURS )
@@ -190,6 +208,7 @@ int mbedtls_ecdh_get_params( mbedtls_ecdh_context *ctx, const mbedtls_ecp_keypai
         ( ret = mbedtls_mpi_copy( &ctx->d, &key->d ) ) != 0 )
         return( ret );
 
+    log_point(ECDH_GET_PARAMS_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 
@@ -201,6 +220,7 @@ int mbedtls_ecdh_make_public( mbedtls_ecdh_context *ctx, size_t *olen,
                       int (*f_rng)(void *, unsigned char *, size_t),
                       void *p_rng )
 {
+    log_point(ECDH_MAKE_PUBLIC_CRYPTO_START, global_log_ctx, 0);
     int ret;
 
     if( ctx == NULL || ctx->grp.pbits == 0 )
@@ -210,8 +230,10 @@ int mbedtls_ecdh_make_public( mbedtls_ecdh_context *ctx, size_t *olen,
                 != 0 )
         return( ret );
 
-    return mbedtls_ecp_tls_write_point( &ctx->grp, &ctx->Q, ctx->point_format,
-                                olen, buf, blen );
+    ret = mbedtls_ecp_tls_write_point( &ctx->grp, &ctx->Q, ctx->point_format, olen, buf, blen );
+
+    log_point(ECDH_MAKE_PUBLIC_CRYPTO_STOP, global_log_ctx, 0);
+    return ret;
 }
 
 /*
@@ -220,6 +242,7 @@ int mbedtls_ecdh_make_public( mbedtls_ecdh_context *ctx, size_t *olen,
 int mbedtls_ecdh_read_public( mbedtls_ecdh_context *ctx,
                       const unsigned char *buf, size_t blen )
 {
+    log_point(ECDH_READ_PUBLIC_CRYPTO_START, global_log_ctx, 0);
     int ret;
     const unsigned char *p = buf;
 
@@ -232,6 +255,7 @@ int mbedtls_ecdh_read_public( mbedtls_ecdh_context *ctx,
     if( (size_t)( p - buf ) != blen )
         return( MBEDTLS_ERR_ECP_BAD_INPUT_DATA );
 
+    log_point(ECDH_READ_PUBLIC_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 
@@ -243,6 +267,7 @@ int mbedtls_ecdh_calc_secret( mbedtls_ecdh_context *ctx, size_t *olen,
                       int (*f_rng)(void *, unsigned char *, size_t),
                       void *p_rng )
 {
+    log_point(ECDH_CALC_SECRET_CRYPTO_START, global_log_ctx, 0);
     int ret;
 
     if( ctx == NULL )
@@ -258,7 +283,9 @@ int mbedtls_ecdh_calc_secret( mbedtls_ecdh_context *ctx, size_t *olen,
         return( MBEDTLS_ERR_ECP_BAD_INPUT_DATA );
 
     *olen = ctx->grp.pbits / 8 + ( ( ctx->grp.pbits % 8 ) != 0 );
-    return mbedtls_mpi_write_binary( &ctx->z, buf, *olen );
+    ret = mbedtls_mpi_write_binary( &ctx->z, buf, *olen );
+    log_point(ECDH_CALC_SECRET_CRYPTO_STOP, global_log_ctx, 0);
+    return ret;
 }
 
 #endif /* MBEDTLS_ECDH_C */

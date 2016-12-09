@@ -46,6 +46,7 @@
 #endif /* MBEDTLS_PLATFORM_C */
 #endif /* MBEDTLS_SELF_TEST */
 
+#include "logging.h"
 #if !defined(MBEDTLS_MD4_ALT)
 
 /* Implementation that should never be optimized out by the compiler */
@@ -78,15 +79,19 @@ static void mbedtls_zeroize( void *v, size_t n ) {
 
 void mbedtls_md4_init( mbedtls_md4_context *ctx )
 {
+    log_point(MD4_INIT_CRYPTO_START, global_log_ctx, 0);
     memset( ctx, 0, sizeof( mbedtls_md4_context ) );
+    log_point(MD4_INIT_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 void mbedtls_md4_free( mbedtls_md4_context *ctx )
 {
+    log_point(MD4_FREE_CRYPTO_START, global_log_ctx, 0);
     if( ctx == NULL )
         return;
 
     mbedtls_zeroize( ctx, sizeof( mbedtls_md4_context ) );
+    log_point(MD4_FREE_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 void mbedtls_md4_clone( mbedtls_md4_context *dst,
@@ -100,6 +105,7 @@ void mbedtls_md4_clone( mbedtls_md4_context *dst,
  */
 void mbedtls_md4_starts( mbedtls_md4_context *ctx )
 {
+    log_point(MD4_STARTS_CRYPTO_START, global_log_ctx, 0);
     ctx->total[0] = 0;
     ctx->total[1] = 0;
 
@@ -107,6 +113,7 @@ void mbedtls_md4_starts( mbedtls_md4_context *ctx )
     ctx->state[1] = 0xEFCDAB89;
     ctx->state[2] = 0x98BADCFE;
     ctx->state[3] = 0x10325476;
+    log_point(MD4_STARTS_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 #if !defined(MBEDTLS_MD4_PROCESS_ALT)
@@ -219,6 +226,7 @@ void mbedtls_md4_process( mbedtls_md4_context *ctx, const unsigned char data[64]
  */
 void mbedtls_md4_update( mbedtls_md4_context *ctx, const unsigned char *input, size_t ilen )
 {
+    log_point(MD4_UPDATE_CRYPTO_START, global_log_ctx, 0);
     size_t fill;
     uint32_t left;
 
@@ -256,6 +264,7 @@ void mbedtls_md4_update( mbedtls_md4_context *ctx, const unsigned char *input, s
         memcpy( (void *) (ctx->buffer + left),
                 (void *) input, ilen );
     }
+    log_point(MD4_UPDATE_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 static const unsigned char md4_padding[64] =
@@ -271,6 +280,7 @@ static const unsigned char md4_padding[64] =
  */
 void mbedtls_md4_finish( mbedtls_md4_context *ctx, unsigned char output[16] )
 {
+    log_point(MD4_FINISH_CRYPTO_START, global_log_ctx, 0);
     uint32_t last, padn;
     uint32_t high, low;
     unsigned char msglen[8];
@@ -292,6 +302,7 @@ void mbedtls_md4_finish( mbedtls_md4_context *ctx, unsigned char output[16] )
     PUT_UINT32_LE( ctx->state[1], output,  4 );
     PUT_UINT32_LE( ctx->state[2], output,  8 );
     PUT_UINT32_LE( ctx->state[3], output, 12 );
+    log_point(MD4_FINISH_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 #endif /* !MBEDTLS_MD4_ALT */

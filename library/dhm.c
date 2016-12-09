@@ -57,6 +57,8 @@
 #define mbedtls_free       free
 #endif
 
+#include "logging.h"
+
 /* Implementation that should never be optimized out by the compiler */
 static void mbedtls_zeroize( void *v, size_t n ) {
     volatile unsigned char *p = v; while( n-- ) *p++ = 0;
@@ -120,7 +122,9 @@ cleanup:
 
 void mbedtls_dhm_init( mbedtls_dhm_context *ctx )
 {
+    log_point(DHM_INIT_CRYPTO_START, global_log_ctx, 0);
     memset( ctx, 0, sizeof( mbedtls_dhm_context ) );
+    log_point(DHM_INIT_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 /*
@@ -130,6 +134,7 @@ int mbedtls_dhm_read_params( mbedtls_dhm_context *ctx,
                      unsigned char **p,
                      const unsigned char *end )
 {
+    log_point(DHM_READ_PARAMS_CRYPTO_START, global_log_ctx, 0);
     int ret;
 
     if( ( ret = dhm_read_bignum( &ctx->P,  p, end ) ) != 0 ||
@@ -142,6 +147,7 @@ int mbedtls_dhm_read_params( mbedtls_dhm_context *ctx,
 
     ctx->len = mbedtls_mpi_size( &ctx->P );
 
+    log_point(DHM_READ_PARAMS_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 
@@ -153,6 +159,7 @@ int mbedtls_dhm_make_params( mbedtls_dhm_context *ctx, int x_size,
                      int (*f_rng)(void *, unsigned char *, size_t),
                      void *p_rng )
 {
+    log_point(DHM_MAKE_PARAMS_CRYPTO_START, global_log_ctx, 0);
     int ret, count = 0;
     size_t n1, n2, n3;
     unsigned char *p;
@@ -210,6 +217,7 @@ cleanup:
     if( ret != 0 )
         return( MBEDTLS_ERR_DHM_MAKE_PARAMS_FAILED + ret );
 
+    log_point(DHM_MAKE_PARAMS_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 
@@ -219,6 +227,7 @@ cleanup:
 int mbedtls_dhm_read_public( mbedtls_dhm_context *ctx,
                      const unsigned char *input, size_t ilen )
 {
+    log_point(DHM_READ_PUBLIC_CRYPTO_START, global_log_ctx, 0);
     int ret;
 
     if( ctx == NULL || ilen < 1 || ilen > ctx->len )
@@ -227,6 +236,7 @@ int mbedtls_dhm_read_public( mbedtls_dhm_context *ctx,
     if( ( ret = mbedtls_mpi_read_binary( &ctx->GY, input, ilen ) ) != 0 )
         return( MBEDTLS_ERR_DHM_READ_PUBLIC_FAILED + ret );
 
+    log_point(DHM_READ_PUBLIC_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 
@@ -238,6 +248,7 @@ int mbedtls_dhm_make_public( mbedtls_dhm_context *ctx, int x_size,
                      int (*f_rng)(void *, unsigned char *, size_t),
                      void *p_rng )
 {
+    log_point(DHM_MAKE_PUBLIC_CRYPTO_START, global_log_ctx, 0);
     int ret, count = 0;
 
     if( ctx == NULL || olen < 1 || olen > ctx->len )
@@ -274,6 +285,7 @@ cleanup:
     if( ret != 0 )
         return( MBEDTLS_ERR_DHM_MAKE_PUBLIC_FAILED + ret );
 
+    log_point(DHM_MAKE_PUBLIC_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 
@@ -350,6 +362,7 @@ int mbedtls_dhm_calc_secret( mbedtls_dhm_context *ctx,
                      int (*f_rng)(void *, unsigned char *, size_t),
                      void *p_rng )
 {
+    log_point(DHM_CALC_SECRET_CRYPTO_START, global_log_ctx, 0);
     int ret;
     mbedtls_mpi GYb;
 
@@ -392,6 +405,7 @@ cleanup:
     if( ret != 0 )
         return( MBEDTLS_ERR_DHM_CALC_SECRET_FAILED + ret );
 
+    log_point(DHM_CALC_SECRET_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 
@@ -400,12 +414,14 @@ cleanup:
  */
 void mbedtls_dhm_free( mbedtls_dhm_context *ctx )
 {
+    log_point(DHM_FREE_CRYPTO_START, global_log_ctx, 0);
     mbedtls_mpi_free( &ctx->pX); mbedtls_mpi_free( &ctx->Vf ); mbedtls_mpi_free( &ctx->Vi );
     mbedtls_mpi_free( &ctx->RP ); mbedtls_mpi_free( &ctx->K ); mbedtls_mpi_free( &ctx->GY );
     mbedtls_mpi_free( &ctx->GX ); mbedtls_mpi_free( &ctx->X ); mbedtls_mpi_free( &ctx->G );
     mbedtls_mpi_free( &ctx->P );
 
     mbedtls_zeroize( ctx, sizeof( mbedtls_dhm_context ) );
+    log_point(DHM_FREE_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 #if defined(MBEDTLS_ASN1_PARSE_C)
@@ -415,6 +431,7 @@ void mbedtls_dhm_free( mbedtls_dhm_context *ctx )
 int mbedtls_dhm_parse_dhm( mbedtls_dhm_context *dhm, const unsigned char *dhmin,
                    size_t dhminlen )
 {
+    log_point(DHM_PARSE_DHM_CRYPTO_START, global_log_ctx, 0);
     int ret;
     size_t len;
     unsigned char *p, *end;
@@ -503,6 +520,7 @@ exit:
     if( ret != 0 )
         mbedtls_dhm_free( dhm );
 
+    log_point(DHM_PARSE_DHM_CRYPTO_STOP, global_log_ctx, 0);
     return( ret );
 }
 

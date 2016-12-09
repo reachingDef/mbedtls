@@ -54,6 +54,7 @@
 #endif /* MBEDTLS_PLATFORM_C */
 #endif /* MBEDTLS_SELF_TEST */
 
+#include "logging.h"
 #if !defined(MBEDTLS_SHA512_ALT)
 
 /* Implementation that should never be optimized out by the compiler */
@@ -94,15 +95,19 @@ static void mbedtls_zeroize( void *v, size_t n ) {
 
 void mbedtls_sha512_init( mbedtls_sha512_context *ctx )
 {
+    log_point(SHA512_INIT_CRYPTO_START, global_log_ctx, 0);
     memset( ctx, 0, sizeof( mbedtls_sha512_context ) );
+    log_point(SHA512_INIT_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 void mbedtls_sha512_free( mbedtls_sha512_context *ctx )
 {
+    log_point(SHA512_FREE_CRYPTO_START, global_log_ctx, 0);
     if( ctx == NULL )
         return;
 
     mbedtls_zeroize( ctx, sizeof( mbedtls_sha512_context ) );
+    log_point(SHA512_FREE_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 void mbedtls_sha512_clone( mbedtls_sha512_context *dst,
@@ -116,6 +121,7 @@ void mbedtls_sha512_clone( mbedtls_sha512_context *dst,
  */
 void mbedtls_sha512_starts( mbedtls_sha512_context *ctx, int is384 )
 {
+    log_point(SHA512_STARTS_CRYPTO_START, global_log_ctx, 0);
     ctx->total[0] = 0;
     ctx->total[1] = 0;
 
@@ -145,6 +151,7 @@ void mbedtls_sha512_starts( mbedtls_sha512_context *ctx, int is384 )
     }
 
     ctx->is384 = is384;
+    log_point(SHA512_STARTS_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 #if !defined(MBEDTLS_SHA512_PROCESS_ALT)
@@ -272,6 +279,7 @@ void mbedtls_sha512_process( mbedtls_sha512_context *ctx, const unsigned char da
 void mbedtls_sha512_update( mbedtls_sha512_context *ctx, const unsigned char *input,
                     size_t ilen )
 {
+    log_point(SHA512_UPDATE_CRYPTO_START, global_log_ctx, 0);
     size_t fill;
     unsigned int left;
 
@@ -304,6 +312,7 @@ void mbedtls_sha512_update( mbedtls_sha512_context *ctx, const unsigned char *in
 
     if( ilen > 0 )
         memcpy( (void *) (ctx->buffer + left), input, ilen );
+    log_point(SHA512_UPDATE_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 static const unsigned char sha512_padding[128] =
@@ -323,6 +332,7 @@ static const unsigned char sha512_padding[128] =
  */
 void mbedtls_sha512_finish( mbedtls_sha512_context *ctx, unsigned char output[64] )
 {
+    log_point(SHA512_FINISH_CRYPTO_START, global_log_ctx, 0);
     size_t last, padn;
     uint64_t high, low;
     unsigned char msglen[16];
@@ -352,6 +362,7 @@ void mbedtls_sha512_finish( mbedtls_sha512_context *ctx, unsigned char output[64
         PUT_UINT64_BE( ctx->state[6], output, 48 );
         PUT_UINT64_BE( ctx->state[7], output, 56 );
     }
+    log_point(SHA512_FINISH_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 #endif /* !MBEDTLS_SHA512_ALT */

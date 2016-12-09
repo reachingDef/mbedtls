@@ -54,6 +54,7 @@
 #endif /* MBEDTLS_PLATFORM_C */
 #endif /* MBEDTLS_SELF_TEST && MBEDTLS_AES_C */
 
+#include "logging.h"
 /*
  * 32-bit integer manipulation macros (big endian)
  */
@@ -87,7 +88,9 @@ static void mbedtls_zeroize( void *v, size_t n ) {
  */
 void mbedtls_gcm_init( mbedtls_gcm_context *ctx )
 {
+    log_point(GCM_INIT_CRYPTO_START, global_log_ctx, 0);
     memset( ctx, 0, sizeof( mbedtls_gcm_context ) );
+    log_point(GCM_INIT_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 /*
@@ -163,6 +166,7 @@ int mbedtls_gcm_setkey( mbedtls_gcm_context *ctx,
                         const unsigned char *key,
                         unsigned int keybits )
 {
+    log_point(GCM_SETKEY_CRYPTO_START, global_log_ctx, 0);
     int ret;
     const mbedtls_cipher_info_t *cipher_info;
 
@@ -187,6 +191,7 @@ int mbedtls_gcm_setkey( mbedtls_gcm_context *ctx,
     if( ( ret = gcm_gen_table( ctx ) ) != 0 )
         return( ret );
 
+    log_point(GCM_SETKEY_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 
@@ -270,6 +275,7 @@ int mbedtls_gcm_starts( mbedtls_gcm_context *ctx,
                 const unsigned char *add,
                 size_t add_len )
 {
+    log_point(GCM_STARTS_CRYPTO_START, global_log_ctx, 0);
     int ret;
     unsigned char work_buf[16];
     size_t i;
@@ -341,6 +347,7 @@ int mbedtls_gcm_starts( mbedtls_gcm_context *ctx,
         p += use_len;
     }
 
+    log_point(GCM_STARTS_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 
@@ -349,6 +356,7 @@ int mbedtls_gcm_update( mbedtls_gcm_context *ctx,
                 const unsigned char *input,
                 unsigned char *output )
 {
+    log_point(GCM_UPDATE_CRYPTO_START, global_log_ctx, 0);
     int ret;
     unsigned char ectr[16];
     size_t i;
@@ -400,6 +408,7 @@ int mbedtls_gcm_update( mbedtls_gcm_context *ctx,
         out_p += use_len;
     }
 
+    log_point(GCM_UPDATE_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 
@@ -407,6 +416,7 @@ int mbedtls_gcm_finish( mbedtls_gcm_context *ctx,
                 unsigned char *tag,
                 size_t tag_len )
 {
+    log_point(GCM_FINISH_CRYPTO_START, global_log_ctx, 0);
     unsigned char work_buf[16];
     size_t i;
     uint64_t orig_len = ctx->len * 8;
@@ -435,6 +445,7 @@ int mbedtls_gcm_finish( mbedtls_gcm_context *ctx,
             tag[i] ^= ctx->buf[i];
     }
 
+    log_point(GCM_FINISH_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 
@@ -450,6 +461,7 @@ int mbedtls_gcm_crypt_and_tag( mbedtls_gcm_context *ctx,
                        size_t tag_len,
                        unsigned char *tag )
 {
+    log_point(GCM_CRYPT_AND_TAG_CRYPTO_START, global_log_ctx, 0);
     int ret;
 
     if( ( ret = mbedtls_gcm_starts( ctx, mode, iv, iv_len, add, add_len ) ) != 0 )
@@ -461,6 +473,7 @@ int mbedtls_gcm_crypt_and_tag( mbedtls_gcm_context *ctx,
     if( ( ret = mbedtls_gcm_finish( ctx, tag, tag_len ) ) != 0 )
         return( ret );
 
+    log_point(GCM_CRYPT_AND_TAG_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 
@@ -475,6 +488,7 @@ int mbedtls_gcm_auth_decrypt( mbedtls_gcm_context *ctx,
                       const unsigned char *input,
                       unsigned char *output )
 {
+    log_point(GCM_AUTH_DECRYPT_CRYPTO_START, global_log_ctx, 0);
     int ret;
     unsigned char check_tag[16];
     size_t i;
@@ -497,13 +511,16 @@ int mbedtls_gcm_auth_decrypt( mbedtls_gcm_context *ctx,
         return( MBEDTLS_ERR_GCM_AUTH_FAILED );
     }
 
+    log_point(GCM_AUTH_DECRYPT_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 
 void mbedtls_gcm_free( mbedtls_gcm_context *ctx )
 {
+    log_point(GCM_FREE_CRYPTO_START, global_log_ctx, 0);
     mbedtls_cipher_free( &ctx->cipher_ctx );
     mbedtls_zeroize( ctx, sizeof( mbedtls_gcm_context ) );
+    log_point(GCM_FREE_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 #if defined(MBEDTLS_SELF_TEST) && defined(MBEDTLS_AES_C)

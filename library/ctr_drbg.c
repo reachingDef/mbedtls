@@ -49,6 +49,8 @@
 #endif /* MBEDTLS_PLATFORM_C */
 #endif /* MBEDTLS_SELF_TEST */
 
+#include "logging.h"
+
 /* Implementation that should never be optimized out by the compiler */
 static void mbedtls_zeroize( void *v, size_t n ) {
     volatile unsigned char *p = v; while( n-- ) *p++ = 0;
@@ -59,11 +61,13 @@ static void mbedtls_zeroize( void *v, size_t n ) {
  */
 void mbedtls_ctr_drbg_init( mbedtls_ctr_drbg_context *ctx )
 {
+    log_point(CTR_DRBG_INIT_CRYPTO_START, global_log_ctx, 0);
     memset( ctx, 0, sizeof( mbedtls_ctr_drbg_context ) );
 
 #if defined(MBEDTLS_THREADING_C)
     mbedtls_mutex_init( &ctx->mutex );
 #endif
+    log_point(CTR_DRBG_INIT_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 /*
@@ -114,6 +118,7 @@ int mbedtls_ctr_drbg_seed( mbedtls_ctr_drbg_context *ctx,
 
 void mbedtls_ctr_drbg_free( mbedtls_ctr_drbg_context *ctx )
 {
+    log_point(CTR_DRBG_FREE_CRYPTO_START, global_log_ctx, 0);
     if( ctx == NULL )
         return;
 
@@ -122,6 +127,7 @@ void mbedtls_ctr_drbg_free( mbedtls_ctr_drbg_context *ctx )
 #endif
     mbedtls_aes_free( &ctx->aes_ctx );
     mbedtls_zeroize( ctx, sizeof( mbedtls_ctr_drbg_context ) );
+    log_point(CTR_DRBG_FREE_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 void mbedtls_ctr_drbg_set_prediction_resistance( mbedtls_ctr_drbg_context *ctx, int resistance )
@@ -270,6 +276,7 @@ static int ctr_drbg_update_internal( mbedtls_ctr_drbg_context *ctx,
 void mbedtls_ctr_drbg_update( mbedtls_ctr_drbg_context *ctx,
                       const unsigned char *additional, size_t add_len )
 {
+    log_point(CTR_DRBG_UPDATE_CRYPTO_START, global_log_ctx, 0);
     unsigned char add_input[MBEDTLS_CTR_DRBG_SEEDLEN];
 
     if( add_len > 0 )
@@ -282,11 +289,13 @@ void mbedtls_ctr_drbg_update( mbedtls_ctr_drbg_context *ctx,
         block_cipher_df( add_input, additional, add_len );
         ctr_drbg_update_internal( ctx, add_input );
     }
+    log_point(CTR_DRBG_UPDATE_CRYPTO_STOP, global_log_ctx, 0);
 }
 
 int mbedtls_ctr_drbg_reseed( mbedtls_ctr_drbg_context *ctx,
                      const unsigned char *additional, size_t len )
 {
+    log_point(CTR_DRBG_RESEED_CRYPTO_START, global_log_ctx, 0);
     unsigned char seed[MBEDTLS_CTR_DRBG_MAX_SEED_INPUT];
     size_t seedlen = 0;
 
@@ -326,6 +335,7 @@ int mbedtls_ctr_drbg_reseed( mbedtls_ctr_drbg_context *ctx,
     ctr_drbg_update_internal( ctx, seed );
     ctx->reseed_counter = 1;
 
+    log_point(CTR_DRBG_RESEED_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 
@@ -333,6 +343,7 @@ int mbedtls_ctr_drbg_random_with_add( void *p_rng,
                               unsigned char *output, size_t output_len,
                               const unsigned char *additional, size_t add_len )
 {
+    log_point(CTR_DRBG_RANDOM_WITH_ADD_CRYPTO_START, global_log_ctx, 0);
     int ret = 0;
     mbedtls_ctr_drbg_context *ctx = (mbedtls_ctr_drbg_context *) p_rng;
     unsigned char add_input[MBEDTLS_CTR_DRBG_SEEDLEN];
@@ -392,11 +403,13 @@ int mbedtls_ctr_drbg_random_with_add( void *p_rng,
 
     ctx->reseed_counter++;
 
+    log_point(CTR_DRBG_RANDOM_WITH_ADD_CRYPTO_STOP, global_log_ctx, 0);
     return( 0 );
 }
 
 int mbedtls_ctr_drbg_random( void *p_rng, unsigned char *output, size_t output_len )
 {
+    log_point(CTR_DRBG_RANDOM_CRYPTO_START, global_log_ctx, 0);
     int ret;
     mbedtls_ctr_drbg_context *ctx = (mbedtls_ctr_drbg_context *) p_rng;
 
@@ -412,6 +425,7 @@ int mbedtls_ctr_drbg_random( void *p_rng, unsigned char *output, size_t output_l
         return( MBEDTLS_ERR_THREADING_MUTEX_ERROR );
 #endif
 
+    log_point(CTR_DRBG_RANDOM_CRYPTO_STOP, global_log_ctx, 0);
     return( ret );
 }
 

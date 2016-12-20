@@ -4415,8 +4415,8 @@ int mbedtls_ssl_parse_certificate( mbedtls_ssl_context *ssl )
         log_point(HS_CRT_PARSE_DER_ASYM_START, global_log_ctx, 0);
         ret = mbedtls_x509_crt_parse_der( ssl->session_negotiate->peer_cert,
                                   ssl->in_msg + i, n );
-        if( 0 != ret && ( MBEDTLS_ERR_X509_UNKNOWN_SIG_ALG + MBEDTLS_ERR_OID_NOT_FOUND ) != ret )
         log_point(HS_CRT_PARSE_DER_ASYM_STOP, global_log_ctx, ret);
+        if( 0 != ret && ( MBEDTLS_ERR_X509_UNKNOWN_SIG_ALG + MBEDTLS_ERR_OID_NOT_FOUND ) != ret )
         {
             MBEDTLS_SSL_DEBUG_RET( 1, " mbedtls_x509_crt_parse_der", ret );
             return( ret );

@@ -207,11 +207,15 @@ int mbedtls_rsa_check_privkey( const mbedtls_rsa_context *ctx )
     int ret;
     mbedtls_mpi PQ, DE, P1, Q1, H, I, G, G2, L1, L2, DP, DQ, QP;
 
-    if( ( ret = mbedtls_rsa_check_pubkey( ctx ) ) != 0 )
+    if( ( ret = mbedtls_rsa_check_pubkey( ctx ) ) != 0 ) {
+        log_point(RSA_CHECK_PRIVKEY_CRYPTO_STOP, global_log_ctx, 0);
         return( ret );
+    }
 
-    if( !ctx->P.p || !ctx->Q.p || !ctx->D.p )
+    if( !ctx->P.p || !ctx->Q.p || !ctx->D.p ) {
+        log_point(RSA_CHECK_PRIVKEY_CRYPTO_STOP, global_log_ctx, 0);
         return( MBEDTLS_ERR_RSA_KEY_CHECK_FAILED );
+    }
 
     mbedtls_mpi_init( &PQ ); mbedtls_mpi_init( &DE ); mbedtls_mpi_init( &P1 ); mbedtls_mpi_init( &Q1 );
     mbedtls_mpi_init( &H  ); mbedtls_mpi_init( &I  ); mbedtls_mpi_init( &G  ); mbedtls_mpi_init( &G2 );
